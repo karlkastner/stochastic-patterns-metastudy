@@ -238,16 +238,21 @@ ylabel('Anisotropy of Regularity$_{2\mathrm{d}}$ $S_{cy}/S_{cx}$\hspace*{3em}','
 
 hold on
 dat = load('mat/patterns-metastudy.mat');
-lc = cvec(dat.stat.lc_pxl);
+lc = cvec(1./arrayfun(@(x) x.fc.x.clip,dat.stat));
+ismodel = cvec(arrayfun(@(x) x.ismodel,dat.stat));
+isisotropic = cvec(arrayfun(@(x) x.isisotropic,dat.stat));
+exclude = cvec(arrayfun(@(x) x.exclude,dat.stat));
+Scx = cvec(arrayfun(@(x) x.Sc.x.clip,dat.stat));
+Scy = cvec(arrayfun(@(x) x.Sc.y.clip,dat.stat));
 
-dat.stat.Scx_Scy = dat.stat.Scx.*dat.stat.Scy;
-dat.stat.Scy_div_Scx = dat.stat.Scy./dat.stat.Scx;
+Scx_Scy_     = Scx.*Scy;
+Scy_div_Scx_ = Scy./Scx;
 
 col = 'br';
 for idx=1:2
-fdx = dat.stat.ismodel == (idx-1) & dat.stat.isisotropic == 0 & dat.stat.exclude == 0;
-qxqy = quantile(cvec(dat.stat.Scx_Scy(fdx))./(lc(fdx).^2),[0.25,0.5,0.75]) 
-qy_d_qx = quantile(cvec(dat.stat.Scy_div_Scx(fdx)),[0.25,0.5,0.75]) 
+fdx = ismodel == (idx-1) & isisotropic == 0 & exclude == 0;
+qxqy = quantile(cvec(Scx_Scy_(fdx))./(lc(fdx).^2),[0.25,0.5,0.75]) 
+qy_d_qx = quantile(cvec(Scy_div_Scx_(fdx)),[0.25,0.5,0.75]) 
 x_ = interp1(log(ScxScy),x,log10(qxqy),'linear');
 y_ = interp1(log(Scy_div_Scx),y,log10(qy_d_qx),'linear');
 errorbar(x_(2),y_(2),y_(2)-y_(1),y_(3)-y_(1),x_(2)-x_(1),x_(3)-x_(2),[col(idx)],'linewidth',2)

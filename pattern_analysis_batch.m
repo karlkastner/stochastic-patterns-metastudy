@@ -16,19 +16,25 @@
 %
 % batch script for reproducing the analysis, figures and tables
 %
-% for copyright reasons, the repository only includes images appearing in the
-% accompanying publication, the images extracted from the references are not
-% included
-
-%	fetch_dependcies();
-
+	meta = pattern_analysis_metadata();
+	
+	% create library and output folder
+	mkdir('./lib/');
+	mkdir('./mat/');
+	mkdir('./img/');
+	mkdir('./lib/auxiliar/');
 	addpath(['./lib/auxiliar']);
+
+	% fetch the script for fetching library files
+	cmd = sprintf(['svn export %s/auxiliar/trunk/dependencies_fetch.m ./lib/auxiliar/'],meta.url);
+	system(cmd);
+
+	% fetch library files
+	% dependencies_determine(meta.filename.dependencies,meta.filename.profile,{'pattern_analysis_batch','pdfprint'});
+	dependencies_fetch(meta.url,meta.filename.dependencies);
+
+	% add libraries to path
 	addpath_recursive('./lib');
-
-	mkdir('mat/');
-	mkdir('img/');
-
-	meta = pattern_metadata();
 
 	% set to true to save fitures to files 
 	pflag      = false;
@@ -42,12 +48,13 @@
 
 	pattern_regularity_sweep();
 
-	pattern_metastudy_analyze([],[],meta.pflag);
-	pattern_metastudy_plot(meta);
-
 	experiment_density_averaging();
 
 	experiment_regularity_vs_p_value();
 
 	experiment_regularity_estimate_bias();
+
+	% the metastudy requires images with patterns from the references
+	pattern_metastudy_analyze([],[],meta.pflag);
+	pattern_metastudy_plot(meta);
 

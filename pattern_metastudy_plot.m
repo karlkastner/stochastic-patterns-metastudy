@@ -19,22 +19,18 @@
 function pattern_metastudy_plot(meta)
 	
 	if (nargin()<1)
-		meta = pattern_metadata();
+		meta = pattern_analysis_metadata();
 	end
 	fflag = meta.pflag;
 
-	p_test  = 0.05;
-	avgfun  = @nangeomean
-	avgfun  = @nanmean
-	%avgfun = @nanmedian
+	p_test  = meta.p_test;
+	avgfun  = @nangeomean;
 
-	% TODO from meta	
-	cm = [  0,0,0.8;
-              0.8,0,  0;
-                0,0,0.0];
+	cm = meta.colormap;
+	cm = cm([3,2,1],:); % b,r,k
 
 	% 
-	load('mat/patterns-metastudy.mat');
+	load(meta.filename.metatstudy);
 
 	% extract propertries from structures into arrays	
 	Sa = cell2mat(arrayfun(@(S) rvec(S.angular.pdf.clip), Si,'uniformoutput',false));

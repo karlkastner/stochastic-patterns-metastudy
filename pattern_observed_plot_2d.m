@@ -18,7 +18,7 @@
 %
 function sp_a = pattern_observed_plot_2d(meta)
 	if (nargin()<1)
-		meta = pattern_metadata();
+		meta = pattern_analysis_metadata();
 	end
 	ut = true;
 	fflag = meta.pflag;
@@ -245,7 +245,7 @@ end
 		ylim([0,1.15*sp.stat.Sc.radial.clip*fc(kdx)]);
 		title('Spotted radial','interpreter','latex');
 	end
-	set(gca,'colororder',meta.colororder);
+	set(gca,'colororder',meta.colormap);
 	hold on;
 	xlim([0,3.5]);
 	hold on

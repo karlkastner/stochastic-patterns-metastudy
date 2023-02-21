@@ -61,12 +61,12 @@ function [stat,file_C,Si,Ri] = pattern_metastudy_analyze(id,dflag,pflag,visible)
 	fi.angular = innerspace(-pi,pi,ni.y)';
 
 	% patterns from the accompanying publication
-	cmd = 'ls img/this-publication/[0-9]*.png img/this-publication/[0-9]*.jpg -1';
+	cmd = 'ls patterns/[0-9]*.png patterns/[0-9]*.jpg -1';
 	[~,ret_str] = system(cmd);
 	file_C_ = strsplit(ret_str,'\n');
 
 	% patterns from the literature
-	cmd = 'ls ~/phd/literature/ecohydrology/*/[0-9]*.png -1';
+	cmd = 'ls patterns/references/*/[0-9]*.png -1';
 	[~,ret_str] = system(cmd);
 	file_C = strsplit(ret_str,'\n');
 
@@ -235,10 +235,19 @@ function [stat,file_C,Si,Ri] = pattern_metastudy_analyze(id,dflag,pflag,visible)
 
 		if (pflag)
 			ps = 4;
-			pdfprint(100*figid+plotid+1*nsubplot,[file_C{idx}(1:end-4),'-periodogram-2d.pdf'],ps);
-			pdfprint(100*figid+plotid+2*nsubplot,[file_C{idx}(1:end-4),'-density-2d.pdf'],ps);
-			pdfprint(100*figid+plotid+3*nsubplot,[file_C{idx}(1:end-4),'-density-Sx.pdf'],ps);
-			pdfprint(100*figid+plotid+4*nsubplot,[file_C{idx}(1:end-4),'-density-Sy.pdf'],ps);
+			base = basename(file_C{idx});
+			dir  = dirname(file_C{idx});
+			dir_C = strsplit(dir,filesep);
+			if (length(dir_C)>1)
+				dir  = [dir_C{end-1},'/',dir_C{end}];
+			else
+				dir = dir_C{1};
+			end
+			imgbase = ['img/',dir,'/',base(1:end-4)];
+			pdfprint(100*figid+plotid+1*nsubplot,[imgbase,'-periodogram-2d.pdf'],ps);
+			pdfprint(100*figid+plotid+2*nsubplot,[imgbase,'-density-2d.pdf'],ps);
+			pdfprint(100*figid+plotid+3*nsubplot,[imgbase,'-density-Sx.pdf'],ps);
+			pdfprint(100*figid+plotid+4*nsubplot,[imgbase,'-density-Sy.pdf'],ps);
 			close all;
 		end % if pflag
 	end  % if dflag
@@ -255,7 +264,7 @@ function [stat,file_C,Si,Ri] = pattern_metastudy_analyze(id,dflag,pflag,visible)
 	end % for idx
 	
 	if (saveflag)
-		save('mat/patterns-metastudy.mat','file_C','stat','xi','fi','Si','Ri');
+		save(meta.filename.metastudy,'file_C','stat','xi','fi','Si','Ri');
 	end
 end % function pattern_metastudy_analyze
 

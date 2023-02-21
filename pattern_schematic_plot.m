@@ -19,7 +19,7 @@
 function pattern_schematic_plot(meta)
 
 	if (nargin()<1)
-		meta = pattern_metadata();
+		meta = pattern_analysis_metadata();
 	end
 	pflag = meta.pflag;
 	fflag = pflag;

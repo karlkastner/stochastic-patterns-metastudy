@@ -17,8 +17,8 @@
 % minimum working example for analyzing the regularity of spatial patterns
 %
 
-	img_C = { 'img/this-publication/2a_11.33051_28.35545_model_0_mercator.png',
-		  'img/this-publication/pattern_2d_+11.53386_+027.92788.png'
+	img_C = { 'patterns/2a_pattern_striped_11.33051_28.35545_model_0.png', ...
+		  'patterns/2b_pattern_2d_+11.53386_+027.92788_model_0.png' ...
 		};
 
 	for idx=1:2

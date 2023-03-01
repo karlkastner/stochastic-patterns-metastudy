@@ -1,78 +1,77 @@
-auxiliar/addpath_recursive.m 21
-auxiliar/cvec.m 21
-auxiliar/dependencies_determine.m 21
-auxiliar/flat.m 21
-auxiliar/getfield_deep.m 21
-auxiliar/innerspace.m 21
-auxiliar/io/printf.m 21
-auxiliar/issym.m 21
-auxiliar/limits.m 21
-auxiliar/plot/namedfigure.m 21
-auxiliar/plot/pdfprint.m 21
-auxiliar/plot/splitfigure.m 21
-auxiliar/plot/vline.m 21
-auxiliar/rvec.m 21
-auxiliar/strings/strjoin.m 21
-auxiliar/system/basename.m 21
-auxiliar/system/cbrt.m 21
-auxiliar/system/dirname.m 21
-auxiliar/table2tex.m 21
-mathematics/fourier/fft2_cartesian2radial.m 25
-mathematics/fourier/fft_rotate.m 25
-mathematics/fourier/fourier_axis.m 25
-mathematics/fourier/fourier_axis_2d.m 25
-mathematics/fourier/fourier_freq2ind.m 25
-mathematics/linear-algebra/polynomial/roots3.m 25
-mathematics/linear-algebra/rot2.m 25
-mathematics/monotoneous_indices.m 25
-mathematics/numerical-methods/differentiation/derivative1.m 25
-mathematics/numerical-methods/finite-difference/derivative_matrix_1_1d.m 25
-mathematics/numerical-methods/finite-difference/mid.m 25
-mathematics/numerical-methods/finite-element/int/int_1d_gauss_2.m 25
-mathematics/numerical-methods/integration/cumint_trapezoidal.m 25
-mathematics/signal-processing/autocorrelation/autocorr_angular.m 25
-mathematics/signal-processing/autocorrelation/autocorr_radial.m 25
-mathematics/signal-processing/effective_mask_size.m 25
-mathematics/signal-processing/filters/circfilt2.m 25
-mathematics/signal-processing/filters/gaussfilt2.m 25
-mathematics/signal-processing/fit_spectral_density.m 25
-mathematics/signal-processing/gaussfilt1.m 25
-mathematics/signal-processing/minmax.m 25
-mathematics/signal-processing/periodogram/periodogram_align.m 25
-mathematics/signal-processing/periodogram/periodogram_angular.m 25
-mathematics/signal-processing/periodogram/periodogram_radial.m 25
-mathematics/signal-processing/periodogram/periodogram_test_periodicity_2d.m 25
-mathematics/signal-processing/spectral-density/spectral_density_area.m 25
-mathematics/signal-processing/spectral-density/spectral_density_bandpass_continuous.m 25
-mathematics/signal-processing/spectral-density/spectral_density_bandpass_continuous_max2par.m 25
-mathematics/signal-processing/spectral-density/spectral_density_bandpass_continuous_scale.m 25
-mathematics/signal-processing/spectral-density/spectral_density_brownian_phase.m 25
-mathematics/signal-processing/spectral-density/spectral_density_brownian_phase_across.m 25
-mathematics/signal-processing/spectral-density/spectral_density_brownian_phase_across_mode2par.m 25
-mathematics/signal-processing/spectral-density/spectral_density_brownian_phase_mode2par.m 25
-mathematics/signal-processing/windows/circwin.m 25
-mathematics/signal-processing/windows/gausswin1.m 25
-mathematics/signal-processing/windows/gausswin2.m 25
-mathematics/spatial-pattern-analysis/@Spatial_Pattern/Spatial_Pattern.m 25
-mathematics/spatial-pattern-analysis/@Spatial_Pattern/analyze_grid.m 25
-mathematics/spatial-pattern-analysis/@Spatial_Pattern/fit_parametric_densities.m 25
-mathematics/spatial-pattern-analysis/@Spatial_Pattern/imread.m 25
-mathematics/spatial-pattern-analysis/@Spatial_Pattern/plot.m 25
-mathematics/spatial-pattern-analysis/@Spatial_Pattern/report.m 25
-mathematics/spatial-pattern-analysis/@Spatial_Pattern/resample_functions.m 25
-mathematics/spatial-pattern-analysis/approximate_ratio_distribution.m 25
-mathematics/spatial-pattern-analysis/hexagonal_pattern.m 25
-mathematics/spatial-pattern-analysis/separate_isotropic_from_anisotropic_density.m 25
-mathematics/spatial-pattern-analysis/suppress_low_frequency_lobe.m 25
-mathematics/statistics/binomial.m 25 
-mathematics/statistics/distributions/exppdf_max2par.m 25
-mathematics/statistics/distributions/logn_mode2param.m 25
-mathematics/statistics/distributions/logn_moment2param.m 25
-mathematics/statistics/gamma_mode.m 25
-mathematics/statistics/gamma_mode2par.m 25
-mathematics/statistics/moment-statistics/wmean.m 25
-mathematics/statistics/moment-statistics/wrms.m 25
-mathematics/statistics/moment-statistics/wvar.m 25
-mathematics/statistics/nangeomean.m 25
-mathematics/statistics/order-statistics/kendall_to_pearson.m 25
-mathematics/statistics/range.m 25
+auxiliar/addpath_recursive.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/cvec.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/dependencies_determine.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/flat.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/getfield_deep.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/innerspace.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/io/printf.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/issym.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/limits.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/plot/namedfigure.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/plot/pdfprint.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/plot/splitfigure.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/plot/vline.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/rvec.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/strings/strjoin.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/system/basename.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/system/cbrt.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/system/dirname.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+auxiliar/table2tex.m 22 b31c59d121131ddbf5513c381a668c0ed1ebf386
+mathematics/fourier/fft2_cartesian2radial.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/fourier/fft_rotate.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/fourier/fourier_axis.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/fourier/fourier_axis_2d.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/fourier/fourier_freq2ind.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/linear-algebra/polynomial/roots3.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/linear-algebra/rot2.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/monotoneous_indices.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/numerical-methods/differentiation/derivative1.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/numerical-methods/finite-difference/derivative_matrix_1_1d.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/numerical-methods/finite-difference/mid.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/numerical-methods/finite-element/int/int_1d_gauss_2.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/numerical-methods/integration/cumint_trapezoidal.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/autocorrelation/autocorr_angular.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/autocorrelation/autocorr_radial.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/effective_mask_size.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/filters/circfilt2.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/filters/gaussfilt2.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/fit_spectral_density.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/gaussfilt1.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/minmax.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/periodogram/periodogram_align.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/periodogram/periodogram_angular.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/periodogram/periodogram_radial.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/periodogram/periodogram_test_periodicity_2d.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/spectral-density/spectral_density_area.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/spectral-density/spectral_density_bandpass_continuous.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/spectral-density/spectral_density_bandpass_continuous_max2par.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/spectral-density/spectral_density_bandpass_continuous_scale.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/spectral-density/spectral_density_brownian_phase.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/spectral-density/spectral_density_brownian_phase_across.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/spectral-density/spectral_density_brownian_phase_across_mode2par.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/spectral-density/spectral_density_brownian_phase_mode2par.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/windows/circwin.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/windows/gausswin1.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/signal-processing/windows/gausswin2.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/@Spatial_Pattern/Spatial_Pattern.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/@Spatial_Pattern/analyze_grid.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/@Spatial_Pattern/fit_parametric_densities.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/@Spatial_Pattern/imread.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/@Spatial_Pattern/plot.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/@Spatial_Pattern/report.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/@Spatial_Pattern/resample_functions.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/approximate_ratio_distribution.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/hexagonal_pattern.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/separate_isotropic_from_anisotropic_density.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/spatial-pattern-analysis/suppress_low_frequency_lobe.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/distributions/exppdf_max2par.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/distributions/logn_mode2param.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/distributions/logn_moment2param.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/gamma_mode.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/gamma_mode2par.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/moment-statistics/wmean.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/moment-statistics/wrms.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/moment-statistics/wvar.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/nangeomean.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/order-statistics/kendall_to_pearson.m 25 9bba154344017e265f31fce736bca59e7fbf334b
+mathematics/statistics/range.m 25 9bba154344017e265f31fce736bca59e7fbf334b

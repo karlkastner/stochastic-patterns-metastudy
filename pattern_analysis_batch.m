@@ -26,8 +26,11 @@
 	addpath(['./lib/auxiliar']);
 
 	% fetch the script for fetching library files
-	cmd = sprintf(['svn export %s/auxiliar/trunk/dependencies_fetch.m ./lib/auxiliar/'],meta.url);
-	system(cmd);
+	%cmd = sprintf(['svn export %s/auxiliar/trunk/dependencies_fetch.m ./lib/auxiliar/'],meta.url);
+	%system(cmd);
+	url  = 'https://raw.githubusercontent.com/karlkastner/auxiliar/master/dependencies_fetch.m';
+	dest = './lib/auxiliar/dependencies_fetch.m';
+	urlwrite(url,dest);
 
 	% fetch library files
 	% dependencies_determine(meta.filename.dependencies,meta.filename.profile,{'pattern_analysis_batch','pdfprint'});
@@ -49,6 +52,8 @@
 	pattern_regularity_sweep();
 
 	experiment_density_averaging();
+
+	pattern_regularity_sweep();
 
 	experiment_regularity_vs_p_value();
 

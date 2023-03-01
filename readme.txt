@@ -19,11 +19,10 @@ reproduced with the script "pattern_analysis_batch".
 Reproducing the part of the metastudy requires the patterns displayed
 in the associated publication and those extracted from the references.
 For copyright reasons, only the former are included in this manuscript.
-However, users with access rights to the publications can requested the extrated
+However, users with access rights to the publications can requested the extravted
 images from the first author, Karl Kastner.
 
 Requirements:
 	Matlab (tested with version R2022b)
-	svn (for automated fetching of files)
-	inkscape and pdfcrop (for pdf export)
+	inkscape and pdfcrop (for automated pdf export in linux)
 

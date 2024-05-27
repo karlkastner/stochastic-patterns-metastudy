@@ -14,9 +14,15 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% metadata
+%% metadata
 %
-function meta = pattern_analysis_metadata()
+function meta = pattern_metastudy_metadata()
+	meta.pflag = 0;
+
+	meta.saveflag = true;
+	meta.dflag = 1;
+	meta.visible = 'off';
+
 
 	meta.p_test = 0.05;
 	
@@ -26,9 +32,5 @@ function meta = pattern_analysis_metadata()
 	meta.filename.profile      = 'mat/profiling-information.mat';
 	meta.filename.metastudy    = 'mat/patterns-metastudy.mat';
 
-	% colormap for line plots
-	meta.colormap = [0,0,0;
-		         0.8,0,0;
-		         0,0.2,0.9];
 end
 

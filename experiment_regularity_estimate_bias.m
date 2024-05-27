@@ -14,8 +14,8 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% numerical experiment demonstrating the bias and standard error of the
-% estimated regularity
+%% numerical experiment demonstrating the bias and standard error of the
+%% estimated regularity
 %
 
 if (~exist('pflag','var'))
@@ -41,8 +41,11 @@ dx = 1/(50*fc);
 nf = 0;
 
 % allocate space
+bias     = zeros(length(regularity),length(L));
 bias_rel = zeros(length(regularity),length(L));
+serr     = zeros(length(regularity),length(L));
 serr_rel = zeros(length(regularity),length(L));
+sd       = zeros(length(regularity),length(L));
 sd_rel   = zeros(length(regularity),length(L));
 for idx=1:length(regularity)
 % display progress

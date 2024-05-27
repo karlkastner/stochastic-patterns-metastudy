@@ -14,8 +14,8 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% numerical experiment, demonstrating the unsuitability of p-values as gradual
-% regularity estimates
+%% numerical experiment, demonstrating the unsuitability of p-values as gradual
+%% regularity estimates
 %
 if (~exist('pflag','var'))
 	pflag = 0;
@@ -49,7 +49,7 @@ ns = 101;
 pfmsk = 0.9;
 
 % repeat experiment for a range of regularities
-regularity = [2.^(-3:3)];
+regularity = 2.^(-3:3);
 
 % quantiles of estimates
 qp = zeros(3,length(regularity));
@@ -92,7 +92,7 @@ for jdx=1:length(regularity)
 		fmsk(fx<0) = 0;
 		bmsk = [];
 		% test for periodicity
-		p(idx) = periodogram_test_periodicity_2d(b,nf,bmsk,fmsk,ns);
+		[issignificant,p(idx)] = periodogram_test_periodicity_2d(b,nf,bmsk,fmsk,ns);
 		
 		% estimate density along x
 		hatSx  = sum(hatS,2)*df;

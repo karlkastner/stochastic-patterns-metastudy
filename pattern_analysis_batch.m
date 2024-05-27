@@ -14,16 +14,16 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% batch script for reproducing the analysis, figures and tables
+%% batch script for reproducing the analysis, figures and tables
 %
-	meta = pattern_analysis_metadata();
+	meta = pattern_metastudy_metadata();
 	
 	% create library and output folder
 	mkdir('./lib/');
 	mkdir('./mat/');
 	mkdir('./img/');
 	mkdir('./lib/auxiliar/');
-	addpath(['./lib/auxiliar']);
+	addpath('./lib/auxiliar');
 
 	% fetch the script for fetching library files
 	%cmd = sprintf(['svn export %s/auxiliar/trunk/dependencies_fetch.m ./lib/auxiliar/'],meta.url);
@@ -39,7 +39,7 @@
 	% add libraries to path
 	addpath_recursive('./lib');
 
-	% set to true to save fitures to files 
+	% set to true to save figures to files 
 	pflag      = false;
 	meta.pflag = pflag;
 
@@ -47,13 +47,13 @@
 	
 	pattern_observed_plot_2d(meta);
 
-	pattern_schematic_plot(meta);
+	pattern_synthetic_plot(meta);
 
-	pattern_regularity_sweep();
+	pattern_anisotropic_regularity_sweep();
+
+	pattern_isotropic_regularity_sweep();
 
 	experiment_density_averaging();
-
-	pattern_regularity_sweep();
 
 	experiment_regularity_vs_p_value();
 

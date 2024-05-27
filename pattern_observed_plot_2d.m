@@ -14,11 +14,11 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% plot the remotely sensed patterns and their spectral densities displayed in figure 2
+%% plot the remotely sensed patterns and their spectral densities displayed in figure 2
 %
 function sp_a = pattern_observed_plot_2d(meta)
 	if (nargin()<1)
-		meta = pattern_analysis_metadata();
+		meta = pattern_metastudy_metadata();
 	end
 	ut = true;
 	fflag = meta.pflag;
@@ -28,8 +28,8 @@ function sp_a = pattern_observed_plot_2d(meta)
 	xscale = true;
 
 	f_C = { 
-		'img/this-publication/2a_11.33051_28.35545_model_0_mercator.png', 100, 2.5, ...
-		'img/2d/2/pattern_2d_+11.53386_+027.92788.png',  60, 3.5,
+		'patterns/2a_pattern_anisotropic_11.33051_28.35545_model_0.png', 100, 2.5; ...
+		'patterns/2b_pattern_isotropic_+11.53386_+027.92788_model_0.png', 60, 3.5 ...
 	};
 
 
@@ -37,6 +37,7 @@ function sp_a = pattern_observed_plot_2d(meta)
 
 	% for both the spotted and the banded pattern
 	for jdx=1:size(f_C,1)
+
 	rmax     = f_C{jdx,2};
 	fxscale  = f_C{jdx,3};
 
@@ -45,10 +46,15 @@ function sp_a = pattern_observed_plot_2d(meta)
 	sp.opt.rmax = rmax;
 
 	% read image
-	sp.imread(f_C{jdx,1});
+	g = sp.imread(f_C{jdx,1});
+	b0 = g.img;
+	b0 = imnormalize(b0,0.05,0.9875);
+	n = max(size(b0));
+	b0(n,n,1) = 0;
+
 	if (jdx == 1)
 		sp.L = 2*sp.n;
-	end
+	end % if jdx
 	n   = size(sp.b);
 	L   = sp.L;
 
@@ -61,10 +67,10 @@ function sp_a = pattern_observed_plot_2d(meta)
 		if (1==jdx)
 			[b] = band_pattern(fc(1),n,L,sp.stat.fct);
 		else 
-			[b] = hexagonal_pattern(fc(1),n,L,pi/6);
+			[b] = generate_isotropic_pattern(fc(1),n,L,pi/6);
 		end 
 		sp.b = b;
-	end
+	end % if kdx == 2
 	
 	% analyze the pattern
 	rng(0)
@@ -74,8 +80,8 @@ function sp_a = pattern_observed_plot_2d(meta)
 	f.r    = sp.f.r;
 	f.x    = fftshift(sp.f.x);
 	f.y    = fftshift(sp.f.y);
-	fc(kdx) = sp.stat.fc.radial.clip;
-	reg    = sp.stat.Sc.x.clip.*fc(kdx);
+	fc(kdx) = sp.stat.fc.radial.hp;
+	reg    = sp.stat.Sc.x.hp.*fc(kdx);
 
 	fprintf('P-value of periodicity test: %f\n',sp.stat.p_periodic);
 	fprintf('Wavelength: %f\n',1./fc(kdx));
@@ -89,17 +95,19 @@ function sp_a = pattern_observed_plot_2d(meta)
 	b_ = sp.b_square;
 	if (xscale)
 		if (sp.stat.isisotropic)
-			lc = 1./sp.stat.fc.radial.clip;
+			lc = 1./sp.stat.fc.radial.hp;
 		else
-			lc = 1./sp.stat.fc.x.clip;
+			lc = 1./sp.stat.fc.x.hp;
 		end
 		xs=1./lc;
-	end
+	end % if xscale
+	sp.b_square = b0;
 	sp.plot('b');
+	colormap(flipud(colormap_vegetation(256)));
 
 	if(~xscale)
 	set(gca,'xtick',-1500:250:1500,'ytick',-1500:250:1500);
-	end
+	end % if ~ xscale
 	clim_ = quantile(b_(:),[0.2,0.8]);
 	clim(clim_);
 	hold on
@@ -107,8 +115,8 @@ function sp_a = pattern_observed_plot_2d(meta)
 	if (lineflag)
 	plot(y(round(yc_([1,end]))),x(round(xc_([1,end]))),'r','linewidth',1.5);
 	end
-	catch
-	end
+	catch e
+	end % catch of try
 	L_ = min(sp.L);
 	axis xy 
 	axis tight
@@ -117,7 +125,7 @@ function sp_a = pattern_observed_plot_2d(meta)
 	axis square
 	if (fflag)
 		title('');
-		colormap gray
+		%colormap gray
 		axis on;
 		if (xscale)
 			xlabel('$x/\lambda_c$','interpreter','latex');
@@ -127,7 +135,7 @@ function sp_a = pattern_observed_plot_2d(meta)
 		end
 	else
 	title('Pattern (biomass proxy)','interpreter','latex');
-	end
+	end % if fflag
 if (0)
 	ax2 = axes(tp);
 	xs = 1e-3;
@@ -142,17 +150,23 @@ if (0)
 	axis(ax2,'xy');
 	xlabel('$x$/km','interpreter','latex');
 	ylabel('$y$/km','interpreter','latex');
-end
+end % if 0
+	axis(10*[0,1,0,1]);
+
 	% plot the 2D-periodogram
 	splitfigure([2,4],[jdx,2],fflag,'',10.^kdx,ut,tp);
 	cla();
 	% rotate, to make bands parallel to y
-	sp.plot('S.rot.clip');
+	sp.plot('S.rot.hp');
+	cx = clim();
+	clim([0,0.25*cx(2)]);
+	%colormap(flipud(colormap_vegetation(256)));
+	colormap(flipud(gray(256)));
 	% note: surface not properly plotted as svg,'edgecolor','none');
 	if (~meta.pflag) % && ~rotate)
 		hold on
-		%plot(-sp.stat.fc.y.clip/fc(kdx),-sp.stat.fc.x.clip/fc(kdx),'r*')
-	end
+		%plot(-sp.stat.fc.y.hp/fc(kdx),-sp.stat.fc.x.hp/fc(kdx),'r*')
+	end % if ~ pflag
 	axis(fxscale*[-1,1,-1,1]);
 	if (lineflag)
 		hold on
@@ -164,18 +178,20 @@ end
 		else
 			plot(f.y(round(jc([1,end])))/fc(kdx),f.x(round(ic([1,end])))/fc(kdx),'r','linewidth',1.5);
 		end
-	end
+	end % if lineflag
 	if (fflag)
 		axis on
 	else
 		axis off;
 		title('Periodogram $\hat S$','interpreter','latex');
-	end
+	end % else of if line
 
 	% plot the 2D-autocorrelation
 	splitfigure([2,4],[jdx,3],fflag,'',10.^kdx,ut,tp);
 	cla();
-	sp.plot('R.clip');
+	sp.plot('R.hp');
+	%colormap(flipud(colormap_vegetation(256)));
+	colormap(flipud(gray(256)));
 	title('Autocorrelation $R$','interpreter','latex');
 	axis(4*[-1,1,-1,1]);
 
@@ -183,11 +199,13 @@ end
 	splitfigure([2,4],[jdx,4],fflag,'',10.^kdx, ut,tp);
 	cla();
 	sp.plot('S.rot.bar');
+	%colormap(flipud(colormap_vegetation(256)));
+	colormap(flipud(gray(256)));
 	axis(fxscale*[-1,1,-1,1]);
 	hold on 
 	if (lineflag)
 %		plot(f.y(round(jc_([1,end])))/fc(kdx),f.x(round(ic_([1,end])))/fc(kdx),'b','linewidth',1.5);
-	end
+	end % if linef
 	axis off
 	if (fflag)
 		%axis off
@@ -196,7 +214,7 @@ end
 		title('Spectral Density $\hat S$','interpreter','latex');
 		cl = colorbar();
 		title(cl,'${\bar S}/\lambda_c^2$','interpreter','latex')
-	end
+	end % if fflag
 
 	% plot pattern biomass proxy along the transect
 if (0)
@@ -206,18 +224,18 @@ if (0)
 	ylabel('Normalized biomas proxy')
 	xlabel('$r/\lambda_c$','interpreter','latex');
 	xlim([0,range(xl)]);
-end
+end % if 0
 
 	% 1D autocorrelation in direction perpendicular to bands or radial for spotted pattern
 	splitfigure([2,4],[jdx,6],fflag,'',10.^kdx, ut,tp);
 	cla();
 	if (sp.stat.isisotropic)
-		plot(sp.x*fc(kdx),fftshift(sp.R.rot.x.clip));
+		plot(sp.x*fc(kdx),fftshift(sp.R.rot.x.hp));
 		ylabel('$R_x$','rot',0,'interpreter','latex');
 	else
-		plot(sp.r*fc(kdx),sp.R.radial.clip);
+		plot(sp.r*fc(kdx),sp.R.radial.hp);
 		ylabel('$R_r$','rot',0,'interpreter','latex');
-	end
+	end % else of issio
 	xlim([0,2.5]); %fc(kdx)*rmax]);
 	xlabel('$x / \lambda_c$','interpreter','latex')
 	
@@ -233,7 +251,7 @@ end
 		sp.plot('S.rot.x.brownian_phase_mean');
 		sp.plot('S.rot.x.bandpass_mean');
 		end
-		ylim([0,1.05*sp.stat.Sc.x.clip*fc(kdx)]);
+		ylim([0,1.05*sp.stat.Sc.x.hp*fc(kdx)]);
 		title('Banded perpendicular','interpreter','latex');
 	else
 		sp.plot('S.radial.hat');
@@ -242,9 +260,9 @@ end
 		sp.plot('S.radial.brownian_phase_mean');
 		sp.plot('S.radial.bandpass_mean');
 		end
-		ylim([0,1.15*sp.stat.Sc.radial.clip*fc(kdx)]);
+		ylim([0,1.15*sp.stat.Sc.radial.hp*fc(kdx)]);
 		title('Spotted radial','interpreter','latex');
-	end
+	end % else of ~isiso
 	set(gca,'colororder',meta.colormap);
 	hold on;
 	xlim([0,3.5]);
@@ -254,7 +272,7 @@ end
 		,['BM R^2 = ',num2str(round(sp.stat.fit.x.brownian_phase_mean.stat.r2,3))] ...
 		,['BP R^2 = ',num2str(round(sp.stat.fit.x.bandpass_mean.stat.r2,3))] ...
 		);
-	end
+	end % if 0
 	% plot density in the direction perpendicular to pattern, if pattern is banded
 	splitfigure([2,4],[jdx,8],fflag,'',10.^kdx,ut,tp);
 	cla();
@@ -264,18 +282,19 @@ end
 		if (0)
 		sp.plot('S.rot.y.brownian_phase_across');
 		end
-		ylim([0,1.05*sp.stat.Sc.x.clip*fc(kdx)]);
-	end
+		ylim([0,1.05*sp.stat.Sc.x.hp*fc(kdx)]);
+	end % if isiso
 	hold on;
 	xlim([0,3.5]);
 	hold on
 	if (0)
 	legend('empirical',['BP R^2=', num2str(roundn(sp.stat.fit.y.brownian_phase_across.stat.r2,3))]);
-	end
+	end % if 0
 	title('Banded parallel','interpreter','latex');
 
 	end % for kdx
 	sp_a(jdx) = sp;
+
 	end % for jdx
 	if (meta.pflag)
 		ps = 4;
@@ -292,19 +311,19 @@ end
 		pdfprint(18,'img/pattern-2d-band-spectral-density-Sy.pdf',ps,aspect_,fmt);
 
 
-	%	pdfprint(101,'img/pattern-2d-band-idealized.pdf',ps,aspect,[]);
-	%	pdfprint(102,'img/pattern-2d-band-idealized-periodogram.png',ps,aspect,fmt);
-	%	pdfprint(103,'img/pattern-2d-band-idealized-autocorrelation.pdf',ps,aspect,[]);
-	%	pdfprint(104,'img/pattern-2d-band-idealized-spectral-density.png',ps,aspect,fmt);
+		pdfprint(101,'img/pattern-2d-band-idealized.pdf',ps,aspect,[]);
+		pdfprint(102,'img/pattern-2d-band-idealized-periodogram.png',ps,aspect,fmt);
+		pdfprint(103,'img/pattern-2d-band-idealized-autocorrelation.pdf',ps,aspect,[]);
+		pdfprint(104,'img/pattern-2d-band-idealized-spectral-density.png',ps,aspect,fmt);
 
 	%	figure(14);
 	%	colormap(gray(round(8*1.3)));
 	%	clim(max(S(:))*[-0.3,1]) 
 	%	pdfprint(14,'img/pattern-2d-spectral-density-grey.png',ps,aspect,fmt);
 		
-	%	pdfprint(15,'img/pattern-2d-transect.pdf',ps,aspect,[]);
-	%	pdfprint(17,'img/pattern-2d-transect-autocorrelation.pdf',ps,aspect,[]);
-	%	pdfprint(18,'img/pattern-2d-transect-spectral-density.pdf',ps,aspect,[]);
+		pdfprint(15,'img/pattern-2d-transect.pdf',ps,aspect,[]);
+		pdfprint(17,'img/pattern-2d-transect-autocorrelation.pdf',ps,aspect,[]);
+		pdfprint(18,'img/pattern-2d-transect-spectral-density.pdf',ps,aspect,[]);
 
 		pdfprint(21,'img/pattern-2d-spot.pdf',ps,aspect,[]);
 		pdfprint(22,'img/pattern-2d-spot-periodogram.pdf',ps,aspect,fmt);
@@ -312,10 +331,10 @@ end
 
 		pdfprint(27,'img/pattern-2d-spot-spectral-density-Sr.pdf',ps,aspect_,fmt);
 
-	%	pdfprint(201,'img/pattern-2d-spot-idealized.pdf',ps,aspect,[]);
-	%	pdfprint(202,'img/pattern-2d-spot-idealized-periodogram.png',ps,aspect,fmt);
-	%	pdfprint(204,'img/pattern-2d-spot-idealized-spectral-density.png',ps,aspect,fmt);
-	%	pdfprint(1000,'img/pattern-2d-band-radial-periodogram.pdf',ps);
+		pdfprint(201,'img/pattern-2d-spot-idealized.pdf',ps,aspect,[]);
+		pdfprint(202,'img/pattern-2d-spot-idealized-periodogram.png',ps,aspect,fmt);
+		pdfprint(204,'img/pattern-2d-spot-idealized-spectral-density.png',ps,aspect,fmt);
+		pdfprint(1000,'img/pattern-2d-band-radial-periodogram.pdf',ps);
 	end
 	save('mat/observed-patterns-2d.mat','sp_a');	
 end % plot_observed_pattern_2d

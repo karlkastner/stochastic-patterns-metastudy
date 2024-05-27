@@ -14,15 +14,17 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% plot synthetic periodic and stochastic patterns
+%% plot synthetic periodic and stochastic patterns
 %
-function pattern_schematic_plot(meta)
+function plot_schematic_density_decomposition_1d(meta)
 
 	if (nargin()<1)
-		meta = pattern_analysis_metadata();
+		meta = pattern_metastudy_metadata();
 	end
 	pflag = meta.pflag;
 	fflag = pflag;
+	
+	cmap = colormap_kop();
 	
 	ppattern = 0.66;
 	islogn   = false;
@@ -41,6 +43,8 @@ function pattern_schematic_plot(meta)
 	Sc = 1.5;
 	sy = 1.25;
 	ns = 100;
+
+	Sc = [0.5,1,2];
 		
 	s=struct();
 	% for isotropic, anisotropic
@@ -49,14 +53,14 @@ function pattern_schematic_plot(meta)
 		x = innerspace(0,L(1),n(1))-L(1)/2;
 		y = innerspace(0,L(2),n(2))-L(2)/2;
 		% coordinate axes in frequency space
-		[fx,fy,frr] = fourier_axis_2d(L,n);
+		[fx,fy,frr,tt] = fourier_axis_2d(L,n);
 	% for periodic, periodic with noise, stochastic
 	for idx=1:3
 		% reset random number generator for exact reproducibility of figures
 		rng(0);
 
 	switch (idx)
-	case {1}
+	case {10}
 		if (isiso)
 			% periodic hexagonal pattern
 			p = 1;
@@ -64,7 +68,7 @@ function pattern_schematic_plot(meta)
 			scale = false;
 			a0 = 0;
 			sbm = [];
-			[b,x,y,Lx,Ly] = hexagonal_pattern(fc,n(1),L(1),a0,scale,sbm,p,q);
+			[b,x,y,Lx,Ly] = generate_isotropic_pattern(fc,n(1),L(1),a0,scale,sbm,p,q);
 			x=x-mean(x);
 			y=y-mean(y);
 			L = [Lx,Ly];
@@ -72,38 +76,45 @@ function pattern_schematic_plot(meta)
 			[fx,fy,frr] = fourier_axis_2d(L,n);
 		else
 			% periodic striped pattern
-		b = sin(2*pi*x*fc + 0.*y')';
+			b = sin(2*pi*x*fc + 0.*y')';
 		end
 		S = abs(fft2(b)).^2;
 		S(1,1) = 0;
-	case {2}
+	case {20}
 		% add noise to periodic patterns
 		e=randn(n);
 		b = ppattern*b./rms(b(:))+(1-ppattern)*e/rms(e(:));
 		S = S/mean(S(:)) + ones(n);
-	case {3}
+	case {1,2,3}
 		% stochastic pattern
 		e  = randn(n);
 		if (~isiso)
 			% striped pattern
 			if (islogn)
-				[a,b] = logn_mode2param(fc,Sc);
+				[a,b] = logn_mode2param(fc,Sc(idx));
 				Sx    = lognpdf(fx,a,b);
 				Sy    = normpdf(fy,0,0.5./fc);
 			else
-				[a,b] = gamma_mode2par(fc,Sc);
+				[a,b] = gamma_mode2par(fc,Sc(idx));
 				Sx    = gampdf(fx,a,b);
-				Sy    = gampdf(abs(fy),1,0.25);
+				%[a,b] = gamma_mode2par(1e-3,Sc(idx));
+				c=exppdf_max2par(Sc(idx))
+				%Sy    = gampdf(abs(fy),a,b);
+				Sy = exppdf(abs(fy),c);
 			end
 			S = cvec(Sx)*rvec(Sy);
 		else
 			% isotropic pattern
 			if (islogn)
-				[a,b] = logn_mode2param(fc,Sc);
-				S = lognpdf(frr,a,b);
+				[a,b] = logn_mode2param(fc,Sc(idx));
+				Sr = lognpdf(frr,a,b);
 			else
-				[a,b] = gamma_mode2par(fc,Sc);
-				S = gampdf(frr,a,b);
+				[a,b] = gamma_mode2par(fc,Sc(idx));
+				Sr = gampdf(frr,a,b);
+				Sct(idx) = Sc(idx)*2/pi;
+				ct  = misesn_max2par(0.5*Sct(idx),6);
+				St = misesnpdf(tt,0,ct,6);
+				S = Sr.*St;
 			end
 		end
 		% transfer function
@@ -129,9 +140,9 @@ function pattern_schematic_plot(meta)
 	fmsk = (frr<4*fc);
 	bmsk = [];
 	% TODO use spatial pattern analyis here
-        [p_periodic, stati, out] = periodogram_test_periodicity_2d(...
-					b, nf_test, bmsk, fmsk, ns);
-	
+        [isperiodic, p_periodic, stati, out] = periodogram_test_periodicity_2d(...
+					b, L, nf_test, bmsk, fmsk, ns);
+
 	R = real(ifft2(S));
 	R = R/R(1,1);
 	Sx = mean(S,2);
@@ -140,7 +151,7 @@ function pattern_schematic_plot(meta)
 	Sx = Sx/(sum(Sx(fdx))/L(1));
 
 	Sy  = mean(S,1);
-	fdx = true(size(fy));
+	fdx = (fy>=0); %true(size(fy));
 	Sy  = Sy/(sum(Sy(fdx))/L(1));
 
 	Rx = mean(R,2);
@@ -181,7 +192,8 @@ function pattern_schematic_plot(meta)
 	s(isiso+1,idx).ft = ft;
 	s(isiso+1,idx).Sr = Sr;
 	s(isiso+1,idx).St = St;
-	
+
+if (0)	
 	% density on secondary axis
 	splitfigure([3,8],[10+isiso*10,(idx-1)*8+7],fflag);
 	cla
@@ -366,24 +378,28 @@ function pattern_schematic_plot(meta)
 	
 		fflag=0;
 	end % if idx == 3
-
+end
 	end %  for idx
 
 	% density on primary axis
 	splitfigure([2,3],[3,1+3*isiso],fflag);
 	 cla;
-	ls_C = {'-','--','-'};
-	lw  = [1,1.5,1];
+	ls_C = {'-','-','-'};
+	lw  = [1,1,1];
 	for idx=1:3;
 		if (isiso)
 			plot(s(isiso+1,idx).fr,s(isiso+1,idx).Sr,ls_C{idx},'linewidth',lw(idx));
+			lh =legend(num2str(cvec(Sc)));
+			title(lh,'$S_{rc}/\lambda_c$','interpreter','latex');
 		else
-			plot(s(isiso+1,idx).fx,s(isiso+1,idx).Sx,ls_C{idx},'linewidth',lw(idx));
+			plot(fftshift(s(isiso+1,idx).fx),fftshift(s(isiso+1,idx).Sx),ls_C{idx},'linewidth',lw(idx));
+			lh =legend(num2str(cvec(Sc)));
+			title(lh,'$S_{xc}/\lambda_c$','interpreter','latex');
 		end
 		hold on;
 	end
 	 xlim([0,2.5]);
-	 set(gca,'colororder',meta.colormap)
+	 set(gca,'colororder',cmap)
 	if (isiso)
 	 xlabel('Wavenumber $k_r/k_c$','interpreter','latex');
 	 ylabel('Density $S_r/k_c$','interpreter','latex');
@@ -395,17 +411,21 @@ function pattern_schematic_plot(meta)
 	% density along secondary axis	
 	splitfigure([2,3],[3,2+3*isiso],fflag);
 	cla();
-	ls_C = {'-','--','-'};
-	lw  = [1,1.5,1];
+	ls_C = {'-','-','-'};
+	lw  = [1,1,1];
 	for idx=1:3;
 		if (isiso)
 			plot(s(isiso+1,idx).ft,s(isiso+1,idx).St,ls_C{idx},'linewidth',lw(idx));
+			lh =legend(arrayfun(@(x) sprintf('%g/\\pi',x),cvec(Sct*pi),'uniformoutput',false));
+			title(lh,'$S_{\theta\,c}$','interpreter','latex');
 		else
-			plot(s(isiso+1,idx).fy,s(isiso+1,idx).Sy,ls_C{idx},'linewidth',lw(idx));
+			plot(fftshift(s(isiso+1,idx).fy),fftshift(s(isiso+1,idx).Sy),ls_C{idx},'linewidth',lw(idx));
+			lh =legend(num2str(cvec(Sc)));
+			title(lh,'$S_{y\,c}/\lambda_c$','interpreter','latex');
 		end
 		hold on;
 	end
-	 set(gca,'colororder',meta.colormap)
+	 set(gca,'colororder',cmap)
 	if (isiso)
 	 xlabel('Angle $\theta$','interpreter','latex');
 	 ylabel('Density $S_\theta$','interpreter','latex');
@@ -424,7 +444,7 @@ function pattern_schematic_plot(meta)
 		hold on;
 	end
 	axis off
-	set(gca,'colororder',meta.colormap)
+	set(gca,'colororder',cmap)
 	legend('Periodic','Periodic + Noise','Stochastic')
 	
 	 splitfigure([2,3],[3,2+3*isiso],fflag);
@@ -434,7 +454,7 @@ function pattern_schematic_plot(meta)
 	 hold on;
 	 end % for idx
 	 xlim([0,2.5])
-	 set(gca,'colororder',meta.colormap)
+	 set(gca,'colororder',cmap)
 	 xlabel('Lag distance $x/\lambda_c$','interpreter','latex');
 	 ylabel('Density $S_x/k_c$','interpreter','latex');
 	if (isiso)

@@ -14,7 +14,7 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-% minimum working example for analyzing the regularity of spatial patterns
+%% minimum working example for analyzing the regularity of spatial patterns
 %
 
 	img_C = { 'patterns/2a_pattern_striped_11.33051_28.35545_model_0.png', ...

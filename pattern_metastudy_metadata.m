@@ -29,8 +29,8 @@ function meta = pattern_metastudy_metadata()
 	meta.url                   = 'https://github.com/karlkastner/';
 
 	meta.filename.dependencies = 'dependencies.csv';
-	meta.filename.profile      = 'mat/profiling-information.mat';
+	meta.filename.profile      = 'mat/profiling-information-metastudy.mat';
 	meta.filename.metastudy    = 'mat/patterns-metastudy.mat';
-
+	meta.filename.patterns_literature_stat_csv = 'output/patterns-literature-stat.csv';
 end
 

@@ -17,8 +17,10 @@
 %% minimum working example for analyzing the regularity of spatial patterns
 %
 
-	img_C = { 'patterns/2a_pattern_striped_11.33051_28.35545_model_0.png', ...
-		  'patterns/2b_pattern_2d_+11.53386_+027.92788_model_0.png' ...
+
+
+	img_C = { 'patterns/1a_pattern_iso_0_11.33051_28.35545_model_0.png', ...
+		  'patterns/1b_pattern_iso_1_+11.53386_+027.92788_model_0.png',
 		};
 
 	for idx=1:2
@@ -45,7 +47,7 @@
 
 	% plot 2D periodogram, low-frequency components suppressed
 	subplot(2,3,2);
-	sp.plot('S.clip');
+	sp.plot('S.hp');
 	title('2D-Periodogram');
 
 	% plot 2D density
@@ -58,7 +60,7 @@
 		subplot(2,3,4);
 		sp.plot('S.radial.hat');
 		hold on
-		sp.plot('S.radial.clip');
+		sp.plot('S.radial.hp');
 		legend('complete','low-frequencies suppressed')
 		title('Density along major axis');
 		ylim([0,1])
@@ -74,13 +76,13 @@
 		subplot(2,3,4);
 		sp.plot('S.rot.x.hat');
 		hold on
-		sp.plot('S.rot.x.clip');
+		sp.plot('S.rot.x.hp');
 		legend('complete','low-frequencies suppressed')
 		title('Density along major axis');
 	
 		% plot 1D density along secondary axis
 		subplot(2,3,5);
-		sp.plot('S.rot.y.clip');
+		sp.plot('S.rot.y.hp');
 		title('Density along secondary axis');
 	end % else of if isstochastic
 

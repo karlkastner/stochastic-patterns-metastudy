@@ -27,7 +27,7 @@ fc = 0.5;
 regx = 1;
 regy = 2;
 % density maxima
-Sxc = regx/fc;
+Sxpc = regx/fc;
 Syc = regy/fc;
 
 % spatial extent
@@ -52,11 +52,11 @@ fx = fourier_axis(Lx,nx);
 fy = fourier_axis(Ly,ny);
 
 % density parameters
-[fx0,sx] = normalwrappedpdf_mode2par(fc,Sxc)
+[fx0,sx] = normalmirroredpdf_mode2par(fc,0.5*Sxpc)
 [fy0,sy] = normpdf_mode2par(0,Syc);
 
 % densities along axes
-Sx = 0.5*normalwrappedpdf(fx,fx0,sx);
+Sx = normalmirroredpdf(fx,fx0,sx);
 Sy = normpdf(fy,fy0,sy);
 % two dimensional density
 Sxy = cvec(Sx)*rvec(Sy);
@@ -149,18 +149,19 @@ end
 if (1)
 
 rng(0)
-nrep = 100;
+nrep  = 1000;
 Lxmax = 100;
 Lx  = Lxmax*(logspace(-1,0,10));
+% spatial resolution
+dx   = 0.1/fc;
 %Ly = 100./Lx;
 regx = 1;
 regy = 1;
 fc   = 1;
-Sxc  = regx/fc;
+Sxpc  = regx/fc;
 Syc  = regy/fc;
-[fx0,sx] = normalwrappedpdf_mode2par(fc,Sxc)
+[fx0,sx] = normalmirroredpdf_mode2par(fc,0.5*Sxpc)
 [fy0,sy] = normpdf_mode2par(0,Syc);
-dx   = 0.1/fc;
 
 regx_est = [];
 for idx=1:length(Lx)
@@ -169,29 +170,33 @@ for idx=1:length(Lx)
 	nx = round(Lx(idx)/dx);
 	ny = round(Ly/dx);
 	mx = sqrt(Lx(idx)/Ly);
+	% spectral axes
 	fx = fourier_axis(Lx(idx),nx);
 	fy = fourier_axis(Ly,ny);
-	Sx  = 0.5*normalwrappedpdf(fx,fx0,sx);
+	% density components
+	Sx  = normalmirroredpdf(fx,fx0,sx);
 	Sy = normpdf(fy,fy0,sy);
+	% two dimensional density
 	Sxy = cvec(Sx)*rvec(Sy);
 	Txy = sqrt(Sxy); 
 for jdx=1:(nrep)
+	% generated a random pattern
 	e = randn(nx,ny);
 	b = ifft2(Txy.*fft2(e));
 	b = real(b); 
 	% periodogram
 	hatSxy = abs(fft2(b-mean(b,'all'))).^2;
 	% normalize
-	hatSxy = hatSxy/(sum(hatSxy)/Lx(idx)/Ly);
+	hatSxy = hatSxy/(sum(hatSxy,'all')/Lx(idx)/Ly);
 	% density component
 	barSx = sum(hatSxy,2)/Ly;
 	% smoothed density component
 	mx_(idx) = round(mx);
 	barSx_ = ifftshift(meanfilt1(fftshift(barSx),mx_(idx)));
 
-	[Sxc,mdx] = max(barSx);
+	[Sxc_,mdx] = max(barSx);
 	fc_        = fx(mdx);
-   	regx_est(idx,jdx,1) = 2*Sxc*fc_;
+   	regx_est(idx,jdx,1) = 2*Sxpc*fc_;
 
 	[Sxc,mdx] = max(barSx_);
 	fc_        = fx(mdx);

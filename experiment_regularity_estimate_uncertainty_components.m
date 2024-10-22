@@ -22,7 +22,7 @@
 if (~exist('pflag','var'))
 	pflag = 0;
 end
-fflag = pflag;
+fflag = (pflag == 1);
 
 % characteristic wavelength
 lc = 1;
@@ -83,9 +83,9 @@ if (~exist('stat','var'))
 		switch (type)
 		case {'normal'}
 			% parameter
-			[f0, sx] = normalwrappedpdf_mode2par(fc,Sxpc);
+			[f0, sx] = normalmirroredpdf_mode2par(fc,0.5*Sxpc);
 			% density
-			Sx = 0.5*normalwrappedpdf(fx,f0,sx);
+			Sx = normalmirroredpdf(fx,f0,sx);
 			Sxp = Sx.*(fx>=0);
 			
 			% cumulative density
@@ -101,7 +101,7 @@ if (~exist('stat','var'))
 		case {'lognormal'}
 			[a, b] = lognpdf_mode2par(fc,Sxpc);
 			sx = lognpdf_std(a,b);
-			Sx = 0.5*lognwrappedpdf(fx,a,b);
+			Sx = lognmirroredpdf(fx,a,b);
 			f_me0 = logninv(0.5,a,b);
 		end % switch
 
@@ -314,11 +314,7 @@ ylabel('b_qr')
 %splitfigure([2,3],[1,5],fflag,'',100)
 %semilogx(reg_x_r,se_fc_r./fc,'linewidth',1)
 
-tdx
-if(1)
-if (~pflag)
-	pdfprint(100*tdx,['img/uncertainty-regularity-estimate-overview-',type,'.pdf'],1);
-else
+if (pflag == 1)
 	ps = 3.5;
 	pdfprint(100*tdx+1,['img/uncertainty-estimate-',type,'-mse-regx.pdf'],ps);
 	pdfprint(100*tdx+2,['img/uncertainty-estimate-',type,'-mse-Sxpc.pdf'],ps);
@@ -331,6 +327,8 @@ else
 	pdfprint(100*tdx+2+8,['img/uncertainty-estimate-',type,'-bias-Sxpc.pdf'],ps);
 	pdfprint(100*tdx+3+8,['img/uncertainty-estimate-',type,'-bias-fc.pdf'],ps);
 end
+if (pflag == 2)
+	pdfprint(100*tdx,['img/uncertainty-regularity-estimate-overview-',type,'.pdf'],1);
 end
 
 end % for tdx 

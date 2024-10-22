@@ -1,4 +1,5 @@
 % Thu 23 Feb 15:25:26 CET 2023
+% Karl Kastner, Berlin
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -21,11 +22,11 @@ if (~exist('pflag','var'))
 end
 ps = 1.5;
 
+m = 40;
 % characteristic wavelength of patern
 lc = 1;
 % length of domain, determining spectral resolution
-L = 40*lc;
-m = 40;
+L = m*lc;
 % length of grid cells, determining spatial resolution
 % the spectral and spatial resolution with respect to the pattern wavelength
 % is kept identical here, but this is not necessary
@@ -37,9 +38,8 @@ s   = flipud(2.^(-2:0.5:3.5)');
 % seed of random number generator
 seed = 1;
 
-rng_ = 1;
 % output file name
-filename=sprintf('mat/synthetic-isotropic-pattern-rng-%d-L-%d-m-%d.mat',rng_,L,m);
+filename=sprintf('mat/synthetic-isotropic-pattern-rng-%d-L-%d-m-%d.mat',seed,L,m);
 filename
 if (exist(filename,'file'))
 	disp('Loading file');
@@ -53,7 +53,7 @@ else
 	for idx=1:length(s)
 		disp(idx)
 		% reset random number generated so that all patterns are generated with the same noise
-		rng(rng_);
+		rng(seed);
 		% generate hexagonal pattern with phase noise
 		%[b,x,y]=generate_isotropic_pattern(1/lc,n,L,0,0,s(idx),0.5,1);
 		alpha = 0;

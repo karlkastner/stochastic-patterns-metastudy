@@ -17,6 +17,8 @@ if (~exist('pflag','var'))
 	pflag = 0;
 end
 fflag = pflag;
+
+% parameter
 qq = 1;
 p=2;
  q=1/3;
@@ -28,30 +30,45 @@ p=2;
  b = 3;
 b = 1;
 %a = 0;
- L=1000;
-% L = 10.5;
- dx=1/100;
- n=L/dx+1;
- x = cvec(innerspace(-L/2,L/2,n));
- y = [	(1+abs(x).^qq)./(1+b*abs(x).^qq).*cos(2*pi*x), ...
+
+% spatial extent
+L=1000;
+% spatial resolution
+dx=1/100;
+% spectral resolution
+df=1/L;
+% number of grid points
+n=L/dx+1;
+% spatial axis
+x = cvec(innerspace(-L/2,L/2,n));
+% spectral axis
+fx=fourier_axis(x);
+
+% Autocorrelation
+ R = [	(1+abs(x).^qq)./(1+b*abs(x).^qq).*cos(2*pi*x), ...
 	exp(-a*abs(x).^p).*cos(2*pi*x), ...
 	exp(-pi*a*abs(x).^p), ...
 	zeros(n,1) ...
 	... (q+(1-q)*exp(-a/(1-q)*abs(x).^p/(p))) ...
 	];
- y((n+1)/2,end) = 1;
+% normalize
+R((n+1)/2,end) = 1;
+% density
+S=real(ifft(ifftshift(R,1)));
+% normalize
+S= S./(df*sum(S));
+% density along positive half-axis
+Sxp = 2*S.*(fx>0);
+
 splitfigure([2,2],[1,1],fflag);
 cla
- plot(x,y,'linewidth',1);
- xlim([-sqrt(eps),5.25]);
- ylim([-1,1]);
- hold on
- %hline(0) 
- area([3.25,4.25],[1,1]*0.99,-20,'facecolor','white','edgecolor','none');
- S=real(ifft(ifftshift(y,1)));
- df=1/L;
- S=2*S./(df*sum(S));
- fx=fourier_axis(x);
+plot(x,R,'linewidth',1);
+xlim([-sqrt(eps),5.25]);
+ylim([-1,1]);
+hold on
+%hline(0) 
+area([3.25,4.25],[1,1]*0.99,-20,'facecolor','white','edgecolor','none');
+
  xlabel('Lag distance $x/\lambda_c$','interpreter','latex');
  ylabel('Autocorrelation $R_x$','interpreter','latex')
  %legend('Stochastic','Periodic')
@@ -66,13 +83,13 @@ cla
 
 splitfigure([2,2],[1,2],fflag);
 cla
- plot(fftshift(fx),fftshift(S,1),'linewidth',1);
+ plot(fftshift(fx),fftshift(Sxp,1),'linewidth',1);
  hold on
  xlim([0,2]);
  ylim([-sqrt(eps),6]);
  area([0.01,1.99],[5,5],3.5,'facecolor','white','edgecolor','none');
  xlabel('Wavenumber $k_x/k_c$','interpreter','latex');
- ylabel('Density $S_x/\lambda_c$','interpreter','latex')
+ ylabel('Density $S_x^+/\lambda_c$','interpreter','latex')
  text(0,5,'$0.3 \frac{L}{\lambda_c}$','interpreter','latex');  
  %colormap(cm([3,2,1],:));
  set(gca,'colororder',cm);

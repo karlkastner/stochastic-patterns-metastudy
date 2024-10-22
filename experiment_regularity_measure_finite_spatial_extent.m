@@ -37,7 +37,7 @@ distribution_C = {'gauss','laplace','cauchy'};
 reg = [];
 reg_ = [];
 entropy =[];
-sd= [];
+fsd= [];
 Rc = [];
 % for each spatial extent
 for idx=1:length(L)
@@ -53,15 +53,15 @@ for idx=1:length(L)
 	switch (distribution)
 	case {'gauss'}
 		% density parameter
-		[f0,s]=normalwrappedpdf_mode2par(fc,Sxpc);
+		[f0,s]=normalmirroredpdf_mode2par(fc,0.5*Sxpc);
 		% density
-		Sx     = 0.5*normalwrappedpdf(fx,f0,s);
+		Sx     = normalmirroredpdf(fx,f0,s);
 	case {'laplace'}
-		[f0,s]=laplacewrappedpdf_mode2par(fc,Sxpc);
-		Sx  = 0.5*laplacewrappedpdf(fx,f0,s);
+		[f0,s]=laplacemirroredpdf_mode2par(fc,0.5*Sxpc);
+		Sx  = laplacemirroredpdf(fx,f0,s);
 	case {'cauchy'}
-		[f0,s]=cauchywrappedpdf_mode2par(fc,Sxpc);
-		Sx  = 0.5*cauchywrappedpdf(fx,f0,s);
+		[f0,s]=cauchymirroredpdf_mode2par(fc,0.5*Sxpc);
+		Sx  = cauchymirroredpdf(fx,f0,s);
 	end
 
 	% estimate regularity from various parameters
@@ -69,7 +69,7 @@ for idx=1:length(L)
 
 	Rc(idx,jdx) = out.Rc;
 	entropy(idx,jdx) = out.entropy;
-	sd(idx,jdx) = out.sd;
+	fsd(idx,jdx) = out.fsd;
 if (0)
 	if (1==jdx)
 		figure(1)
@@ -101,11 +101,11 @@ legend('Gauss','Laplace','Cauchy');
 %hline(reg(end,:))
 
 subplot(sph,4,2);
-plot(L,sd,'linewidth',1);
+plot(L,fsd,'linewidth',1);
 ylim([0,2.5]);
 xlabel(xlabel_str);
 ylabel('Standard deviation')
-%hline(sd(end,:))
+%hline(fsd(end,:))
 %xlim(xl_);
 
 subplot(sph,4,3);

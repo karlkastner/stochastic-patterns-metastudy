@@ -16,6 +16,7 @@
 %
 %% batch script for reproducing the analysis, figures and tables
 %
+
 	meta = pattern_metastudy_metadata();
 	
 	% create library and output folder
@@ -34,7 +35,7 @@
 
 	% fetch library files
 	% dependencies_determine(meta.filename.dependencies,meta.filename.profile,{'pattern_analysis_batch','pdfprint'});
-	dependencies_fetch(meta.url,meta.filename.dependencies);
+%	dependencies_fetch(meta.url,meta.filename.dependencies);
 
 	% add libraries to path
 	addpath_recursive('./lib');
@@ -44,22 +45,67 @@
 	meta.pflag = pflag;
 
 	pattern_analysis_minimum_working_example();
-	
+
+	% insets for figures of a schematic anisotropic and isotropic pattern
+	plot_schematic_patterns_insets();
+
+	% Figure  1	
 	pattern_observed_plot_2d(meta);
 
-	pattern_synthetic_plot(meta);
+	% Figure 2
+	plot_schematic_periodic_vs_stochastic();
 
-	pattern_anisotropic_regularity_sweep();
+	% Figure 3
+	plot_schematic_density_decomposition_2d;
 
-	pattern_isotropic_regularity_sweep();
+	% Figure 4
+	experiment_spectral_density_scaling();
 
-	experiment_density_averaging();
+	% Figure 5 a-b and Figure 6 a-b
+	plot_schematic_density_decomposition_1d();
 
-	experiment_regularity_vs_p_value();
+	% Figure 5 c
+	plot_anisotropic_density_2d();
 
-	experiment_regularity_estimate_bias();
+	% Figure 5 d
+	pattern_synthetic_regularity_sweep_anisotropic();
+
+	% Figure 6 c
+	pattern_synthetic_regularity_sweep_isotropic();
 
 	% the metastudy requires images with patterns from the references
-	pattern_metastudy_analyze([],[],meta.pflag);
+	pattern_metastudy_analyze([],meta);
+
+	% Figure 7 and Figure 8
 	pattern_metastudy_plot(meta);
+
+	% Figure SI  1
+	experiment_area_aspect_ratio();
+
+	% Figure SI  2 and Figure SI 3	
+	experiment_regularity_estimate_uncertainty_components();
+
+	% Figure SI  4
+	experiment_regularity_estimate_uncertainty_varying_extent();
+
+	% Figure SI  5
+	experiment_density_averaging();
+
+	% Figure SI  6
+	experiment_regularity_vs_p_value();
+
+	% Figure SI  7
+	example_patterns_several_distributions();
+
+	% Figure SI  8
+	experiment_regularity_measure_convergence();
+
+	% Figure SI  9 ai-aiii
+	experiment_regularity_measure_finite_spatial_extent();	
+
+	% Figure SI  9 bi-biii
+	experiment_regularity_measure_finite_sampling_interval();
+
+	% Figure SI 10
+	experiment_regularity_estimate_uncertainty_measure_comparison();
 

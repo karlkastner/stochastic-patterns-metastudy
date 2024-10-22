@@ -61,17 +61,17 @@ reg_ = [];
 	switch (distribution)
 	case {'gauss'}
 		% density parameter
-		[f0x,sx] = normalwrappedpdf_mode2par(fc,Sxpc);
+		[f0x,sx] = normalmirroredpdf_mode2par(fc,0.5*Sxpc);
 		[f0y,sy] = normpdf_mode2par(0,Syc);
 		% density along axis
-		Sx_ = 0.5*normalwrappedpdf(fx,f0x,sx);
+		Sx_ = normalmirroredpdf(fx,f0x,sx);
 		Sy_ = normpdf(fy,f0y,sy);
 		% two-dimensional density
 		Sxy_ = cvec(Sx_)*rvec(Sy_);
 	case {'laplace'}
-		[f0x,sx] = laplacewrappedpdf_mode2par(fc,Sxpc);
+		[f0x,sx] = laplacemirroredpdf_mode2par(fc,0.5*Sxpc);
 		[f0y,sy] = laplacepdf_mode2par(0,Syc);
-		Sx_ = 0.5*laplacewrappedpdf(fx,f0x,sx);
+		Sx_ = laplacemirroredpdf(fx,f0x,sx);
 		Sy_ = laplacepdf(fy,f0y,sy);
 		Sxy_ = cvec(Sx_)*rvec(Sy_);
 		sc = 0.785*0.8;
@@ -81,9 +81,9 @@ reg_ = [];
 		fr2   = hypot((cvec(fx)+f0x)/sx,rvec(fy)/sy);
 		Sxy_     = 1/(sx*sy)*(exp(-fr1) + exp(-fr2));
 	case {'cauchy'}
-		[fx0,sx] = cauchywrappedpdf_mode2par(fc,Sxpc);
+		[fx0,sx] = cauchymirroredpdf_mode2par(fc,0.5*Sxpc);
 		[fy0,sy] = cauchypdf_mode2par(0,Syc);
-		Sx_      = 0.5*cauchywrappedpdf(fx,fx0,sx);
+		Sx_      = cauchymirroredpdf(fx,fx0,sx);
 		Sy_      = cauchypdf(fy,f0y,sy);
 		% note, this misses the normalization
 		sc = 0.25; % for Sc = 1, 0.2518

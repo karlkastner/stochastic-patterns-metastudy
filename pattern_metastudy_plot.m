@@ -1,4 +1,4 @@
-% 2022-12-02 00:25:33.449376625 +0100
+%% 2022-12-02 00:25:33.449376625 +0100
 % Karl Kästner, Berlin
 %
 % This program is free software: you can redistribute it and/or modify
@@ -32,29 +32,38 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 	cm = colormap_krb();
 	cm = cm([3,2,1],:); % b,r,k
 
-	% 
+	% declare loaded variables
+	stat =struct();
+	file_C = {}; 
+	Si = [];
+	Ri = [];
+	xi = [];
+	fi = [];
 	load(meta.filename.metastudy);
 
 	% extract propertries from structures into arrays	
-	Sa = cell2mat(arrayfun(@(S) rvec(S.angular.pdf.hp), Si,'uniformoutput',false));
+	Sa = cell2mat(arrayfun(@(S) rvec(S.angular_p.pdf.hp), Si,'uniformoutput',false));
 	Sr = (arrayfun(@(S) rvec(S.radial.pdf.hp), Si,'uniformoutput',false));
 	Sr = cell2mat(Sr);
-	Sx = cell2mat(arrayfun(@(S) rvec(S.x.pdf.hp), Si,'uniformoutput',false));
+	Sx = cell2mat(arrayfun(@(S) rvec(S.xp.pdf.hp), Si,'uniformoutput',false));
 	Sy = cell2mat(arrayfun(@(S) rvec(S.y.pdf.hp), Si,'uniformoutput',false));
 	Rr = cell2mat(arrayfun(@(R) rvec(R.radial), Ri,'uniformoutput',false));
 %	Rx = cell2mat(arrayfun(@(R) rvec(R.x), Ri,'uniformoutput',false));
 	Le_r = cvec(arrayfun(@(x) x.L_eff.r,stat));
 	Le_x = cvec(arrayfun(@(x) x.L_eff.x,stat));
+	Le_y = cvec(arrayfun(@(x) x.L_eff.y,stat));
+	Le_aniso = sqrt(Le_x.*Le_y);
 
-	Scx = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.x.hp), stat,'uniformoutput',false)));
-	Scy = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.y.hp), stat,'uniformoutput',false)));
-	Scr = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.radial.hp), stat,'uniformoutput',false)));
-	Sct = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.angular.hp), stat,'uniformoutput',false)));
-	ct = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.angular_resampled.pdf.hp), stat,'uniformoutput',false)));
+	Sxpc = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.xp.con), stat,'uniformoutput',false)));
+	Syc = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.y.con), stat,'uniformoutput',false)));
+	Src = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.radial.con), stat,'uniformoutput',false)));
+	Stpc = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.angular_p.con), stat,'uniformoutput',false)));
+	%ct = cvec(cell2mat(arrayfun(@(s) rvec(s.Sc.angular_resampled.pdf.hp), stat,'uniformoutput',false)));
 	exclude      = cvec(arrayfun(@(x) x.exclude,stat));
-	lcx          = cvec(arrayfun(@(x) 1./x.fc.x.hp,stat));
-	lcr          = cvec(arrayfun(@(x) 1./x.fc.radial.hp,stat));
-	isisotropic  = cvec(arrayfun(@(x) x.isisotropic,stat));
+	lxc          = cvec(arrayfun(@(x) 1./x.fc.x.hp,stat));
+	lrc          = cvec(arrayfun(@(x) 1./x.fc.radial.hp,stat));
+	%isisotropic  = cvec(arrayfun(@(x) x.isisotropic,stat));
+	isisotropic  = cvec(arrayfun(@(x) x.isisoman,stat));
 	ismodel      = cvec(arrayfun(@(x) x.ismodel,stat));
 	is1d         = cvec(arrayfun(@(x) x.is1d,stat));
 	isstochastic = cvec(arrayfun(@(x) x.isstochastic,stat));
@@ -62,26 +71,28 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 	p_periodic   = cvec(arrayfun(@(x) double(x.p_periodic),stat));
 	fhp          = cvec(arrayfun(@(x) x.fhp,stat));
 
+	isisotropic = logical(isisotropic);
+
 	% relative domain size
-	Le_rel_x     = Le_x./lcx;
-	Le_rel_r     = Le_r./lcr;
-	Le_rel       = Le_rel_x;
+	Le_rel_aniso = Le_aniso./lxc;
+	Le_rel_r     = Le_r./lrc;
+	Le_rel       = Le_rel_aniso;
 	Le_rel(isisotropic) = Le_rel_r(isisotropic);
 
 	% characteristic wavelength
-	lc              = lcx;
-	lc(isisotropic) = lcr(isisotropic);
+	lc              = lxc;
+	lc(isisotropic) = lrc(isisotropic);
 
 	% density maxima
-	Sc1 = Scx;	
-	Sc2 = Scy;
+	S1c = Sxpc;	
+	S2c = Syc;
 	fdx = isisotropic==1;
-	Sc1(fdx) = Scr(fdx);
-	Sc2(fdx) = Sct(fdx).*lc(fdx);
+	S1c(fdx) = Src(fdx);
+	S2c(fdx) = Stpc(fdx).*lc(fdx);
 
 	% regularity
-	regularityx   = Scx./lcx;
-	regularityr   = Scr./lcr;
+	regularityx   = Sxpc./lxc;
+	regularityr   = Src./lrc;
 	regularity     = regularityx;
 	regularity(isisotropic) = regularityr(isisotropic);
 	fc = 1./lc;
@@ -105,12 +116,15 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 	exclude(fdx) = 1;
 	fdx = find(fdx & ~exclude);
 	printf('Number of non-exluded patterns where fc < fhpe: %d\n',length(fdx));
-%	file_C{fdx}
-	%disp(fdx);
+
+	fdx = isnan(ismodel);
+	exclude(fdx) = 1;
+	printf('Number of patterns where model/nature was not specified:',find(fdx));
+	ismodel(isnan(ismodel)) = false;
 
 	
 	% test for differences between natural and model generated patterns
-	fdx0 =  (hassdf) & ismodel & (~is1d) & (~isstochastic) & ~exclude;
+	fdx0 =  (hassdf) &  ismodel & (~is1d) & (~isstochastic) & ~exclude;
 	fdx1 =  (hassdf) & ~ismodel & (~is1d) & (~isstochastic) & ~exclude;
 	if (exist('mediantest','file'))
 		p = mediantest(regularity(fdx0),regularity(fdx1));
@@ -132,111 +146,57 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 	tab_sum{id,1} = "Total";
 	tab_sum{id,2} = sum(fdx);
 	tab_sum{id,3:5} = NaN;
-	%tab_sum{id,3} = mean(p_periodic(fdx)<p_test);
-	%tab_sum{id,4} = median(Sc1(fdx)./lc(fdx));
-	%tab_sum{id,5} = median(Sc2(fdx)./lc(fdx));
+
+	% confidence interval
+	%pc = 0.64;
+	pc = 1-2*(1-normcdf(1))	
+	%pc = 1-2*(1-normcdf(2))	
 
 	fdx = (hassdf == 1) & (~exclude) & (nL*lc < lc_) & (ismodel == 0);
-	printf('Nature all: %d %0.2f %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test), median(Sc1(fdx)./lc(fdx)),median(Sc2(fdx)./lc(fdx)));
-	id = 2;
-	tab_sum(id,1) = {"Nature all"};
-	tab_sum{id,2} = sum(fdx);
-	tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
-	tab_sum{id,4} = round(median(Sc1(fdx)./lc(fdx)),2);
-	tab_sum{id,5} = round(median(Sc2(fdx)./lc(fdx)),2);
+	printf('Nature all: %d %0.2f %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test), median(S1c(fdx)./lc(fdx)),median(S2c(fdx)./lc(fdx)));
+	tabulate(2,'Nature all');
 %	tab_sum{id,6}  = hassdf(fdx);
 
 	fdx = (hassdf == 1) & ~exclude & (nL*lc < lc_) & (ismodel == 0) & (isisotropic == 0);
-	printf('Nature aniso: %d %0.2f %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test), median(Scx(fdx)./lc(fdx)),median(Scy(fdx)./lc(fdx)));
-	id = 3;
-	tab_sum{id,1} = {'Nature anisotropic'};
-	tab_sum{id,2} = sum(fdx);
-	tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
-	tab_sum{id,4} = round(median(Sc1(fdx)./lc(fdx)),2);
-	tab_sum{id,5} = round(median(Sc2(fdx)./lc(fdx)),2);
-%	tab_sum{id,6}  = hassdf(fdx);
+	printf('Nature aniso: %d %0.2f %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test), median(Sxpc(fdx)./lc(fdx)),median(Syc(fdx)./lc(fdx)));
+	tabulate(3,'Nature anisotropic');
 
 	fdx = (hassdf == 1) & (~exclude) & (nL*lc < lc_) & (ismodel == 0) & (isisotropic == 1);
-	printf('Nature   iso: %d %0.2f %0.2f %0.2f\n',sum(fdx), mean(p_periodic(fdx)<p_test), median(Scr(fdx)./lc(fdx)),median(Sct(fdx)));
-	id = 4;
-	tab_sum{id,1} = {'Nature isotropic'};
-	tab_sum{id,2} = sum(fdx);
-	tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
-	tab_sum{id,4} = round(median(Sc1(fdx)./lc(fdx)),2);
-	tab_sum{id,5} = round(median(Sc2(fdx)./lc(fdx)),2);
-%	tab_sum{id,6}  = hassdf(fdx);
+	printf('Nature   iso: %d %0.2f %0.2f %0.2f\n',sum(fdx), mean(p_periodic(fdx)<p_test), median(Src(fdx)./lc(fdx)),median(Stpc(fdx)));
+	tabulate(4,'Nature isotropic');
 
 	fdx = (hassdf == 1) & (~exclude) & (nL*lc < lc_) & (cvec(isstochastic) == 0) & (ismodel == 1) & (is1d == 0); 
-	fprintf('2D Model Total: %d %0.2f %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test), median(Sc1(fdx)./lc(fdx)),median(Sc2(fdx)./lc(fdx)));
-	id = 5;
-	tab_sum{id,1} = {'2D model deterministic all'};
-	tab_sum{id,2} = sum(fdx);
-	tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
-	tab_sum{id,4} = round(median(Sc1(fdx)./lc(fdx)),2);
-	tab_sum{id,5} = round(median(Sc2(fdx)./lc(fdx)),2);
-%	tab_sum{id,6}  = hassdf(fdx);
+	fprintf('2D Model Total: %d %0.2f %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test), median(S1c(fdx)./lc(fdx)),median(S2c(fdx)./lc(fdx)));
+	tabulate(5,'2D model deterministic all');
 
 	fdx = (hassdf == 1) & (exclude == 0) & (nL*lc < lc_) & (cvec(isstochastic) == 0) & (ismodel == 1) & (isisotropic == 0) & (is1d == 0); 
-	fprintf('2D Model Aniso: %d %0.2f %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test), median(Scx(fdx)./lc(fdx)),median(Scy(fdx)./lc(fdx)));
-	id = 6;
-	tab_sum{id,1} = {'2D model deterministic anisotropic'};
-	tab_sum{id,2} = sum(fdx);
-	tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
-	tab_sum{id,4} = round(median(Sc1(fdx)./lc(fdx)),2);
-	tab_sum{id,5} = round(median(Sc2(fdx)./lc(fdx)),2);
-%	tab_sum{id,6}  = hassdf(fdx);
+	fprintf('2D Model Aniso: %d %0.2f %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test), median(Sxpc(fdx)./lc(fdx)),median(Syc(fdx)./lc(fdx)));
+	tabulate(6,'2D model deterministic anisotropic');
 
 	fdx = (hassdf == 1) & (exclude == 0) & (nL*lc < lc_) & (cvec(isstochastic) == 0) & (ismodel == 1) & (isisotropic == 1) & (is1d == 0);
-	fprintf('2D model iso : %d %0.2f %0.2f %0.2f\n',sum(fdx), mean(p_periodic(fdx)<p_test), median(Scr(fdx)./lc(fdx)),median(Sct(fdx)));
-	id = 7;
-	tab_sum{id,1} = {'2D model deterministic isotropic'};
-	tab_sum{id,2} = sum(fdx);
-	tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
-	tab_sum{id,4} = round(median(Sc1(fdx)./lc(fdx)),2);
-	tab_sum{id,5} = round(median(Sc2(fdx)./lc(fdx)),2);
-%	tab_sum{id,6}  = hassdf(fdx);
+	fprintf('2D model iso : %d %0.2f %0.2f %0.2f\n',sum(fdx), mean(p_periodic(fdx)<p_test), median(Src(fdx)./lc(fdx)),median(Stpc(fdx)));
+	tabulate(7,'2D model deterministic isotropic');
 
 	fdx = (hassdf == 1) & (exclude == 0) & (nL*lc < lc_) & (cvec(isstochastic) == 1) & (ismodel == 1) & (isisotropic == 1) & (is1d == 0);
-	fprintf('2D Model stoch iso: %d %0.2f %0.2f %0.2f\n',sum(fdx), mean(p_periodic(fdx)<p_test),median(Scr(fdx)./lc(fdx)),median(Sct(fdx)));
-	id = 8;
-	tab_sum{id,1} = {'2D model stochastic isotropic'};
-	tab_sum{id,2} = sum(fdx);
-	tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
-	tab_sum{id,4} = round(median(Sc1(fdx)./lc(fdx)),2);
-	tab_sum{id,5} = round(median(Sc2(fdx)./lc(fdx)),2);
-%	tab_sum{id,6}  = hassdf(fdx);
+	fprintf('2D Model stoch iso: %d %0.2f %0.2f %0.2f\n',sum(fdx), mean(p_periodic(fdx)<p_test),median(Src(fdx)./lc(fdx)),median(Stpc(fdx)));
+	tabulate(8,'2D model stochastic isotropic');
 
 	fdx = (hassdf == 0) & (exclude == 0) & (nL*lc < lc_) & (cvec(isstochastic) == 0) & (ismodel == 1) & (isisotropic == 1) & (is1d == 0);
-	fprintf('2D Model, w/o sdf: %d %0.2f %0.2f %0.2f\n',sum(fdx), mean(p_periodic(fdx)<p_test),median(Scr(fdx)./lc(fdx)),median(Sct(fdx)));
-	id = 9;
-	tab_sum{id,1} = {'2D model w/o sdf'};
-	tab_sum{id,2} = sum(fdx);
-	tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
-	tab_sum{id,4} = round(median(Sc1(fdx)./lc(fdx)),2);
-	tab_sum{id,5} = round(median(Sc2(fdx)./lc(fdx)),2);
-%	tab_sum{id,6}  = hassdf(fdx);
+	fprintf('2D Model, w/o sdf: %d %0.2f %0.2f %0.2f\n',sum(fdx), mean(p_periodic(fdx)<p_test),median(Src(fdx)./lc(fdx)),median(Stpc(fdx)));
+	tabulate(9,'2D model w/o sdf');
 
 	fdx = (hassdf == 1) & (exclude == 0) & (nL*lc < lc_) & (cvec(isstochastic) == 0) & (ismodel == 1) & (is1d == 1);
-	fprintf('1D Model: %d %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test),median(Scx(fdx)./lc(fdx)));
-	id = 10;
-	tab_sum{id,1} = {'1D model deterministic'};
-	tab_sum{id,2} = sum(fdx);
-	tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
-	tab_sum{id,4} = round(median(Sc1(fdx)./lc(fdx)),2);
-	tab_sum{id,5} = NaN;
-	%round(median(Sc2(fdx)./lc(fdx)),2);
-%	tab_sum{id,6}  = hassdf(fdx);
-	tab_sum.Properties.VariableNames = {'Group','N','$p<$0.05','$S_{c1}/\lambda_c$','$S_{c2}/\lambda_c$'};
+	fprintf('1D Model: %d %0.2f %0.2f\n',sum(fdx),mean(p_periodic(fdx)<p_test),median(Sxpc(fdx)./lc(fdx)));
+	tabulate(10,'1D model deterministic');
+	disp(tab_sum)
+	tab_sum.Properties.VariableNames = {'Group','N','$p<$0.05','$S_{1c}/\lambda_c$','l1','u1','$S_{2c}/\lambda_c$','l2','u2','$L_\{eff}$'};
+	tab_sum.Properties.RowNames = tab_sum.Group;
 	disp(tab_sum);
 
 	fid2 = fopen('mat/metastudy-table-summary.tex','w');
-	s = table2tex(tab_sum);
-	%fprintf(fid2,'\\begin{table}[H]
-	%fprintf(fid2,'\\centering');
+	s = table2tex(tab_sum,2);
 	fprintf(fid2,s);
-	%fprintf(fid2,'\n\\end{table}\n');
 	fclose(fid2);
-%	tab1 = tab;
 
 	% detailed table pattern by pattern
 	tab = table();
@@ -252,43 +212,56 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 		f = f(1:end-4);
 		f = regexprep(f,'patterns/metastudy','metastudy');
 		f = ['',dirname(f),'/crop/',basename(f)];
-		subscript1 = ['xr'];
-		subscript2 = {'y','\theta'};
+		%suffix1 = {'_{x}^+','_r'};
+		%suffix2 = {'_y','_{\theta}^+'};
+		%subsrcipt1 = 'xr';
+		%superscript1 = '+ ';
+		%subsrcipt2 = {'y','\theta'};
+		%superscript2 = ' 
 		root = 'img/metastudy-result/';
 		if (~exclude(idx))
 		j = j+1;
 		if (~is1d(idx))
-			img2d = sprintf('	  \\includegraphics[height=0.23\\textwidth]{%s/%s-density-2d-4-crop.pdf}',root,f); ...
-			imgy  = sprintf('	  \\includegraphics[height=0.23\\textwidth]{%s/%s-density-Sy-4-crop.pdf}',root,f); ...
+			img2d = sprintf('	  \\includegraphics[height=0.22\\textwidth]{%s/%s-density-2d-4-crop.pdf}',root,f); ...
+			imgy  = sprintf('	  \\includegraphics[height=0.22\\textwidth]{%s/%s-density-Sy-4-crop.pdf}',root,f); ...
 			if (isisotropic(idx))
-				regy_label = 'S_\theta';
-				regy = stat(idx).Sc.radial.hp;
+				density_1_label = 'S_r';
+				density_2_label = 'S_{\theta}^+';
+				reg_1_label = 'S_{rc}/\lambda_c';
+				reg_2_label = 'S_{{\theta}c}^+';
+				reg_2 = stat(idx).Sc.angular_p.con;
 			else
-				regy_label = 'S_y/\lambda_c';
-				regy = stat(idx).Sc.y.hp/lc(idx);
+				density_1_label = 'S_x^+';
+				density_2_label = 'S_y';
+				reg_1_label = 'S_{xc}^+/\lambda_c';
+				reg_2_label = 'S_y/\lambda_c';
+				reg_2 = stat(idx).Sc.y.con/lc(idx);
 			end
 		else
 			img2d = 'X (1d)';
 			imgy  = 'X (1d)';
-			regy_label = '-'
-			regy      = NaN;
+			reg_1_label = 'S_{xc}^+/\lambda_c';
+			reg_2_label = 'N/A';
+			reg_2       = NaN;
 		end
 		fprintf(fid,[...
 		'\\begin{tabular}{cccc|c|c|c}\n' ...
-		'\\multicolumn{6}{l}{%s %s %s}\n' ...
+		'\\multicolumn{6}{l}{\\parbox{\\textwidth}{%s %s %s}}\n' ...
 		'\\\\\\hline\n' ...
-		'Density $S_{2d}$ & Density $S_%s$ & Density $S_%s$ & $S_{c%s}/\\lambda_c$ & $%s$ & $L_{eff}/\\lambda_c$ & $p$ \n' ...
+		'Density $S_{xy}$ & Density $%s$ & Density $%s$ & $%s$ & $%s$ & $L_{eff}/\\lambda_c$ & $p$ \n' ...
 		],...	
 		num2str(idx),...
-		figid,basename(d),...
-		subscript1(isisotropic(idx)+1),...
-		subscript2{isisotropic(idx)+1},...
-		subscript1(isisotropic(idx)+1),...
-		regy_label);
+		figid, ...
+		basename(d),...
+		density_1_label, ...
+		density_2_label, ...
+		reg_1_label, ...
+		reg_2_label ...
+		);
 		fprintf(fid,[...	
 		   '\\\\\\hline\n' ...
 		'  %s\n' ...
-		'& \\includegraphics[height=0.23\\textwidth]{%s/%s-density-Sx-4-crop.pdf}\n' ...
+		'& \\includegraphics[height=0.22\\textwidth]{%s/%s-density-Sx-4-crop.pdf}\n' ...
 		'& %s\n'], ...
 		img2d,root,f,imgy);
 	
@@ -300,9 +273,9 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 		... '\\end{tblr}' 
 		'\\end{tabular}\n\\\\' ...
 		],...
-		regularity(idx),regy,Le_rel(idx),p_periodic(idx));
+		regularity(idx),reg_2,Le_rel(idx),p_periodic(idx));
 	
-	% csv-entry
+		% csv-entry
 		dirname_  = dirname(file_C{j});
 		word_C    = strsplit(dirname_,'-');
 		try
@@ -321,7 +294,7 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 			tab.Isotropy{j} = '/';
 		end % switch
 		tab.regularity_x(j) = regularity(j);
-		tab.regularity_y(j) = regy;
+		tab.regularity_y(j) = reg_2;
 		tab.Le_rel(j)       = Le_rel(j);
 		tab.p_periodic(j)   = p_periodic(j);
 		switch (is1d(j))
@@ -349,11 +322,13 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 	
 	end % for idx
 	fclose(fid);
-	writetable(tab,'mat/patterns-literature-stat.csv');
+	filename = meta.filename.patterns_literature_stat_csv;
+	writetable(tab,filename);
+	copyfile(filename,[filename(1:end-4),'-',datestr(now(),'yyyy-mm-dd'),'.csv']);
 
-	% plot regularity	
 	for xy=0:1
 	for isiso_=0:1
+	% plot density	
 	splitfigure([2,2],[30,1+isiso_+2*xy],fflag);
 	cla();
 	
@@ -386,7 +361,7 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 		if (xy)
 			xlim([-1,1]*pi/2);
 			xlabel('Angle $\theta$','interpreter','latex');
-			ylabel('Density $S_\theta$','interpreter','latex');
+			ylabel('Density $S_\theta^+$','interpreter','latex');
 			set(gca,'xtick',[-1/2,-1/4,0,1/4,1/2]*pi,'xticklabel',{'-\pi/2','-\pi/4','0','\pi/4','\pi/2'});
 		else
 			xlim([0,2.5]);
@@ -402,14 +377,14 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 			f = fi.x;
 		end
 		plot(f,S,'linewidth',1);
-		xlim([0,2.5]);
 		if (xy)
 		xlabel('Wavenumber $k_y/k_c$','interpreter','latex');
 		ylabel('Density $S_y / \lambda_c$','interpreter','latex');
+		xlim([-2,2]);
 		else
 			xlim([0,2.5]);
 			xlabel('Wavenumber $k_x / k_c$','interpreter','latex');
-			ylabel('Density $S_x/\lambda_c$','interpreter','latex');
+			ylabel('Density $S_x^+/\lambda_c$','interpreter','latex');
 			legend('Nature','Model');
 		end
 	end % else of isiso
@@ -424,61 +399,59 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 	
 	% coorelation analysis
 	fdx = (hassdf) & (ismodel==0) & (~is1d) & (isisotropic == 0) & (~isstochastic) & ~exclude;
-	c(1) = kendall_to_pearson(corr(cvec(Scx(fdx)),cvec(Scy(fdx))));
+	c(1) = kendall_to_pearson(corr(cvec(Sxpc(fdx)),cvec(Syc(fdx))));
 
-	figure(1003);
-	clf();
-	plot(log10(cvec(Scx(fdx))./lc(fdx)),log10(cvec(Scy(fdx)./lc(fdx))),'.')
+	splitfigure([2,2],[100,3],fflag);
+	cla();
+	plot(log10(cvec(Sxpc(fdx))./lc(fdx)),log10(cvec(Syc(fdx)./lc(fdx))),'.')
 	hold on
 	fdx = hassdf & ismodel & (~is1d) & (isisotropic == 0) & (~isstochastic) & ~exclude;
-	c(2) = kendall_to_pearson(corr(cvec(Scx(fdx)),cvec(Scy(fdx))));
-	plot(log10(cvec(Scx(fdx))./lc(fdx)),log10(cvec(Scy(fdx)./lc(fdx))),'.')
-%	try
+	c(2) = kendall_to_pearson(corr(cvec(Sxpc(fdx)),cvec(Syc(fdx))));
+	plot(log10(cvec(Sxpc(fdx))./lc(fdx)),log10(cvec(Syc(fdx)./lc(fdx))),'.')
 	fdx = hassdf & (ismodel==0) & (~is1d) & (isisotropic == 1) & (~isstochastic) & ~exclude;
-	c(3) = kendall_to_pearson(corr(cvec(Scr(fdx))./lc(fdx),cvec(Sct(fdx))));
-%	catch e
-%	end
+	c(3) = kendall_to_pearson(corr(cvec(Src(fdx))./lc(fdx),cvec(Stpc(fdx))));
 
-	figure(1004)
-	clf();
-	plot(log10(cvec(Scr(fdx))./lc(fdx)),cvec(Sct(fdx)),'.')
+	splitfigure([2,2],[100,4],fflag);
+	cla();
+	plot(log10(cvec(Src(fdx))./lc(fdx)),cvec(Stpc(fdx)),'.')
 	hold on
 	fdx = hassdf & ismodel & (~is1d) & (isisotropic == 1) & (~isstochastic) & ~exclude;
-	c(4) = kendall_to_pearson(corr(cvec(Scr(fdx))./lc(fdx),cvec(Sct(fdx))));
-	plot(log10(cvec(Scr(fdx))./lc(fdx)),cvec(Sct(fdx)),'.')
+	c(4) = kendall_to_pearson(corr(cvec(Src(fdx))./lc(fdx),cvec(Stpc(fdx))));
+	plot(log10(cvec(Src(fdx))./lc(fdx)),cvec(Stpc(fdx)),'.')
 
-	printf('Correlation nature aniso Scx,Scy: %f\n',c(1));
-	printf('Correlation model  aniso Scx,Scy: %f\n',c(2));
-	printf('Correlation nature   iso Scr/lc,Sct: %f\n',c(3));
-	printf('Correlation model    iso Scr/lc,Sct: %f\n',c(4));
+	printf('Correlation nature aniso Sxpc,Syc: %f\n',c(1));
+	printf('Correlation model  aniso Sxpc,Syc: %f\n',c(2));
+	printf('Correlation nature   iso Src/lc,Stpc: %f\n',c(3));
+	printf('Correlation model    iso Src/lc,Stpc: %f\n',c(4));
 
 	% plot correlation
-	splitfigure([2,2],[100,1],fflag)
+	splitfigure([2,2],[100,1],fflag);
 	cla();
 	for idx=1:2
 		plot(idx,c(idx),'*','color',cm(idx,:))
 		hold on
 	end
 	ax = gca;
-	set(ax(1),'ylim',[-0.2,1.09])
-	ylabel(ax(1),'corr($S_x$,$S_y$)','interpreter','latex');
+	set(ax(1),'ylim',[-0.3,1.05])
+	ylabel(ax(1),'corr($S_{xc}^+$,$S_{yc}$)','interpreter','latex');
 	xlim([0.5,2.5]);
 	set(gca,'xtick',1:4,'xticklabel',{'nature','model','nature','model'},'xticklabelrot',45);
 	grid on
-	daspect([2,1,1])
+	daspect([2,1,1]);
 %	yyaxis right
 
 
 	% plot correlation
-	splitfigure([2,2],[100,2],fflag)
+	splitfigure([2,2],[100,2],fflag);
 	for idx=3:4
 		plot(idx-2,c(idx),'*','color',cm(idx-2,:))
 		hold on
 	end
 	ax=gca
 	%set(ax,'ycolor','k');
-	set(ax(1),'ylim',[-0.2,1.09])
-	ylabel(ax,'corr($S_r$,$S_s$)','interpreter','latex');
+	%set(ax(1),'ylim',[-0.2,1.09])
+	set(ax(1),'ylim',[-0.3,1.05])
+	ylabel(ax,'corr($S_{rc}$,$S_{sc}$)','interpreter','latex');
 	xlim([0.5,2.5]);
 %	text(0.6,0.075,'Anisotropic');
 %	text(2.8,0.075,'Isotropic');
@@ -486,7 +459,6 @@ function [tab,tab_sum] = pattern_metastudy_plot(meta)
 	set(gca,'xtick',1:4,'xticklabel',{'nature','model','nature','model'},'xticklabelrot',45);
 	grid on
 	daspect([2,1,1])	
-
 
 	% plot autocorrelation function	
 	for isiso_=0:1
@@ -519,8 +491,8 @@ if (0)
 end
 	else
 if (0)
-		R_ = mean(Rx(fdx,:));
-		plot(xi,R_,'linewidth',1);
+		%R_ = mean(Rx(fdx,:));
+		%plot(xi,R_,'linewidth',1);
 		hold on
 		xlim([0,2.5]);
 		ylabel('R_x');
@@ -557,13 +529,15 @@ end
 		        & ((isstochastic  == isstochastic_(idx)) | ~ismodel_(idx)) ...
 		        & (isisotropic   == isisotropic_(idx) | is1d_(idx) == 1) ...
 		      );
-		np(idx,1) = sum(fdx);
-		q(:,idx) = quantile(regularity(fdx),[0.25,0.5,0.75]);
+		np(idx,1)       = sum(fdx);
+		q(:,idx)        = quantile(regularity(fdx),[0.25,0.5,0.75]);
 		qL_rel(:,idx)   = quantile(Le_rel(fdx),[0.25,0.5,0.75]);
 	end
 	da=[1.5   15.875    1];
 	da=[1.5   10    1];
 	da_=[1.5   0.375    1];
+
+	% plot quantiles of the regularity
 	splitfigure([2,2],[10,1],fflag);
 	cla();
 	id_ = [1:2,6];
@@ -583,7 +557,7 @@ end
 	end
 	xlim([min(idp)-0.5,max(idp)+0.5]);
 	set(gca,'yscale','log');
-	ylabel('Regularity $S_{cx}/\lambda_c$','interpreter','latex');
+	ylabel('Regularity $S_{xc}^+/\lambda_c$','interpreter','latex');
 	set(gca,'xtick',idp,'xticklabel',{'nature','2D-model','1D-model'},'xticklabelrot',45);
 	set(gca,'ytick',2.^(-2:6));
 	ylim([0.4,20]) 
@@ -592,9 +566,87 @@ end
 	%text(1-0.67*0-0.25,ty,'2D')
 	%text(3-0.0,ty,'1D')
 	daspect(da)
-	
+
+	% plot ranges of the primary regularity with ci
+		splitfigure([2,2],[50,1],fflag);
+		cla();
+		r = {'Nature anisotropic','2D model deterministic anisotropic','1D model deterministic'}
+		c = {'l1','$S_{1c}/\lambda_c$','u1'}
+		for idx=1:length(r)
+		errorbar(idx,tab_sum{r{idx},c{2}},tab_sum{r{idx},c{2}}-tab_sum{r{idx},c{1}},tab_sum{r{idx},c{3}}-tab_sum{r{idx},c{2}},'*','color',cm(idx,:));
+		hold on
+		text(idx,tab_sum{r{idx},c{2}},[' ',num2str(tab_sum{r{idx},'N'})]);
+		end
+		ylim([0.4,20]);
+		xlim([0.5,3.5]);
+		set(gca,'yscale','log');
+		ylabel('Regularity $S_{xc}^+/\lambda_c$','interpreter','latex');
+	set(gca,'ytick',2.^(-2:6));
+		id_ = 1:3;
+		set(gca,'xtick',id_,'xticklabel',{'nature','2D-model','1D-model'},'xticklabelrot',45);
+	 	vline(2.5,'linestyle','--','color','k');
+	daspect(da);
+
+		splitfigure([2,2],[50,2],fflag);
+		cla
+		r = {'Nature isotropic','2D model deterministic isotropic','2D model stochastic isotropic'}
+		c = {'l1','$S_{1c}/\lambda_c$','u1'}
+		for idx=1:length(r)
+		errorbar(idx,tab_sum{r{idx},c{2}},tab_sum{r{idx},c{2}}-tab_sum{r{idx},c{1}},tab_sum{r{idx},c{3}}-tab_sum{r{idx},c{2}},'*','color',cm(idx,:));
+		hold on
+		text(idx,tab_sum{r{idx},c{2}},[' ',num2str(tab_sum{r{idx},'N'})]);
+		end
+		ylim([0.4,20]);
+		xlim([0.5,3.5]);
+		set(gca,'yscale','log');
+		ylabel('Regularity $S_{rc}/\lambda_c$','interpreter','latex');
+	set(gca,'ytick',2.^(-2:6));
+		id_ = [1,2,2.3,3,3.3];
+		set(gca,'xtick',id_,'xticklabel',{'nature','determinis-','tic model','stochastic','model'},'xticklabelrot',45);
+	daspect(da);
+
+		splitfigure([2,2],[50,3],fflag);
+		cla();
+		r = {'Nature anisotropic','2D model deterministic anisotropic'} %,'1D model deterministic'}
+		c = {'l2','$S_{2c}/\lambda_c$','u2'}
+		for idx=1:length(r)
+		errorbar(idx,tab_sum{r{idx},c{2}},tab_sum{r{idx},c{2}}-tab_sum{r{idx},c{1}},tab_sum{r{idx},c{3}}-tab_sum{r{idx},c{2}},'*','color',cm(idx,:));
+		hold on
+		text(idx,tab_sum{r{idx},c{2}},[' ',num2str(tab_sum{r{idx},'N'})]);
+		end
+		ylim([0.4,20]);
+		xlim([0.5,2.5]);
+		set(gca,'yscale','log');
+		ylabel('Regularity $S_{yc}/\lambda_c$','interpreter','latex');
+	set(gca,'ytick',2.^(-2:6));
+		id_ = 1:3;
+		set(gca,'xtick',id_,'xticklabel',{'nature','2D-model'},'xticklabelrot',45);
+	daspect(da);
+
+
+		splitfigure([2,2],[50,4],fflag);
+		cla
+		r = {'Nature isotropic','2D model deterministic isotropic','2D model stochastic isotropic'}
+		c = {'l2','$S_{2c}/\lambda_c$','u2'}
+		for idx=1:length(r)
+		errorbar(idx,tab_sum{r{idx},c{2}},tab_sum{r{idx},c{2}}-tab_sum{r{idx},c{1}},tab_sum{r{idx},c{3}}-tab_sum{r{idx},c{2}},'*','color',cm(idx,:));
+		hold on
+		text(idx,tab_sum{r{idx},c{2}},[' ',num2str(tab_sum{r{idx},'N'})]);
+		end
+		ylim([0.25,1]);
+		xlim([0.5,3.5]);
+		set(gca,'yscale','log');
+		ylabel('Regularity $S_{{\theta}c}^+/\lambda_c$','interpreter','latex');
+	set(gca,'ytick',2.^(-2:6));
+		id_ = [1,2,2.3,3,3.3];
+		set(gca,'xtick',id_,'xticklabel',{'nature','determinis-','tic model','stochastic','model'},'xticklabelrot',45);
+	daspect(da_);
+	%end 
+
+	% plot regularity with interquartile ranges
 	% isotropic
 	splitfigure([2,2],[10,2],fflag);
+	cla();
 	id_=3:5;
 	h=errorbar(3,q(2,3),q(2,3)-q(1,3),q(3,3)-q(2,3),'*','color',cm(1,:));
 	hold on
@@ -606,7 +658,7 @@ end
 	end
 	xlim([min(id_)-0.5,max(id_)+0.5]);
 	set(gca,'yscale','log');
-	ylabel('Regularity $S_{cr}/\lambda_c$','interpreter','latex');
+	ylabel('Regularity $S_{rc}/\lambda_c$','interpreter','latex');
 	set(gca,'xtick',id,'xticklabel',leg_C,'xticklabelrot',45);
 	set(gca,'ytick',2.^(-2:6));
 	ylim([0.4,20]) 
@@ -623,9 +675,9 @@ end
 	for idx=1:3
 		lc=cvec(lc);
 		fdx       = ~isisotropic & ~exclude & (ismodel == mo(idx)) & (isstochastic==sto(idx)) & (is1d == 0);
-		q(:,idx)  = quantile(cvec(Scy(fdx))./lc(fdx),[0.25,0.5,0.75]);
+		q(:,idx)  = quantile(cvec(Syc(fdx))./lc(fdx),[0.25,0.5,0.75]);
 		fdx       = isisotropic & ~exclude & (ismodel == mo(idx)) & (isstochastic==sto(idx)) & (is1d == 0);
-		qt(:,idx) = quantile(cvec(Sct(fdx)),[0.25,0.5,0.75]);
+		qt(:,idx) = quantile(cvec(Stpc(fdx)),[0.25,0.5,0.75]);
 	end
 	for idx=1:2
 		h=errorbar(idx,q(2,idx),q(2,idx)-q(1,idx),q(3,idx)-q(2,idx),'*','color',cm(idx,:));
@@ -634,7 +686,7 @@ end
 	%h=errorbar(3,q(2,3),q(2,3)-q(1,3),q(3,3)-q(2,3),'k*');
 	xlim([0.5,2.5]);
 	set(gca,'yscale','log');
-	ylabel('Regularity $S_{cy}/\lambda_c$','interpreter','latex');
+	ylabel('Regularity $S_{yc}/\lambda_c$','interpreter','latex');
 	set(gca,'xtick',1:2,'xticklabel',{'nature','model'},'xticklabelrot',45);
 	ylim([0.4,20]) 
 	set(gca,'ytick',[2.^(-2:1:5)])
@@ -649,7 +701,7 @@ end
 	end
 	xlim([0.5,3.5]);
 	set(gca,'yscale','log');
-	ylabel('Regularity $S_{c\theta}$','interpreter','latex');
+	ylabel('Regularity $S_{{\theta}c}^+$','interpreter','latex');
 	% = \frac{S_{cs}}{\lambda_c}$','interpreter','latex');
 	%set(gca,'xtick',1:3,'xticklabel',{'nature','deterministic','stochastic'},'xticklabelrot',45);
 	id_ = [1,2,2.3,3,3.3];
@@ -663,7 +715,8 @@ end
 	set(gca,'ytick',[2.^(-2:1:5)])
 	daspect(da_)
 	%daspect(d)
-	
+
+	% plot regularity, simple	
 	ismodel_       = [0, 1];
 	isstochastic_  = [0, 0];
 	splitfigure([2,2],[20,1],fflag);
@@ -697,8 +750,9 @@ end
 	 ty = 1.4*64;
 	 text(1-0.67*0-0.25,ty,'2D')
 	 text(6,ty,'1D')
-	
-	splitfigure([2,2],[50,1],fflag);
+
+	% R-simple	
+	splitfigure([2,2],[60,1],fflag);
 	cla();
 	ismodel_ = [0,1,1];
 	is1d_    = [0,0,1];
@@ -712,7 +766,7 @@ end
 		S(~isisotropic,:) = Sx(~isisotropic,:);
 if (0)
 		R = Rr;
-		R(~isisotropic,:) = Rx(~isisotropic,:);
+		%R(~isisotropic,:) = Rx(~isisotropic,:);
 		R1d_(:,idx) = nanmean(R(fdx,:));
 end	
 		S1d_(:,idx) = nangeomean(S(fdx,:));
@@ -732,12 +786,12 @@ end
 		R1d = real(ifft([S1d_; zeros(m,size(S1d_,2)); flipud(S1d_(2:end,:))]));
 		R1d = R1d./R1d(1,:);
 		df=f1d(2)-f1d(1);
-		L = 1./df;
+		%L = 1./df;
 		x=linspace(0,L,length(R1d))';
 	end
 	
 	% plot autocorrelation
-	splitfigure([2,2],[50,2],fflag);
+	splitfigure([2,2],[60,2],fflag);
 	cla
 if (0)
 	plot(xi,R1d_./R1d_(1,:),'linewidth',1);
@@ -762,7 +816,7 @@ end
 		S1d_(:,idx) = nangeomean(S(fdx,:));
 if (0)
 		R = Rr;
-		R(~isisotropic,:) = Rx(~isisotropic,:);
+		%R(~isisotropic,:) = Rx(~isisotropic,:);
 		R1d_(:,idx) = nanmean(R(fdx,:));
 end	
 	end
@@ -783,33 +837,56 @@ end
 
 	if (meta.pflag)
 		ps = 3.5;
-		ps_ =4;
-		pdfprint(101,'img/metastudy-regularity-Scx.pdf',ps_);
-		pdfprint(102,'img/metastudy-regularity-Scr.pdf',ps_);
-		pdfprint(103,'img/metastudy-regularity-Scy.pdf',ps_);
-		pdfprint(104,'img/metastudy-regularity-Sct.pdf',ps_);
-		pdfprint(1001,'img/metastudy-regularity-correlation-Sx-Sy.pdf',ps_);
-		pdfprint(1002,'img/metastudy-regularity-correlation-Sr-St.pdf',ps_);
-	if (0)
-		figure(103); axis square
+		ps_ = 4;
+		% plot with quartiles
+		pdfprint(101,'img/metastudy-regularity-Sxc-q.pdf',ps_);
+		pdfprint(102,'img/metastudy-regularity-Src-q.pdf',ps_);
+		pdfprint(103,'img/metastudy-regularity-Syc-q.pdf',ps_);
+		pdfprint(104,'img/metastudy-regularity-Stc-q.pdf',ps_);
+
+		pdfprint(1001,'img/metastudy-regularity-correlation-Sxpc-Syc.pdf',ps_);
+		pdfprint(1002,'img/metastudy-regularity-correlation-Src-Stc.pdf',ps_);
+
+		% plot with confidence intervals
+		pdfprint(501,'img/metastudy-regularity-Sxc-ci.pdf',ps_);
+		pdfprint(502,'img/metastudy-regularity-Src-ci.pdf',ps_);
+		pdfprint(503,'img/metastudy-regularity-Syc-ci.pdf',ps_);
+		pdfprint(504,'img/metastudy-regularity-Stc-ci.pdf',ps_);
+		
+		figure(103);
+		axis square
 		pdfprint(103,'img/density-literature.pdf',ps);
 		pdfprint(104,'img/autocorrelation-literature.pdf',ps);
 	
 		pdfprint(201,'img/regularity-literature-simple.pdf',ps);
 		pdfprint(203,'img/density-literature-simple.pdf',ps);
 	%	pdfprint(204,'img/autocorrelation-literature-simple.pdf',ps);
-	end
+	
 		pdfprint(301,'img/metastudy-density-Sx.pdf',ps);
 		pdfprint(302,'img/metastudy-density-S-radial.pdf',ps);
 		pdfprint(303,'img/metastudy-density-Sy.pdf',ps);
 		pdfprint(304,'img/metastudy-density-S-angular.pdf',ps);
-	if (0)
+	
 		pdfprint(401,'img/metastudy-autocorrelation-Rx.pdf',ps);
 		pdfprint(402,'img/metastudy-autocorrelation-Rr.pdf',ps);
-	end
-		
-	end % if pflag
 	
+	
+	end % if pflag
+
+	function tabulate(id,title_)
+		tab_sum{id,1} = {title_};
+		tab_sum{id,2} = sum(fdx);
+		tab_sum{id,3} = round(mean(p_periodic(fdx)<p_test),2);
+		tab_sum{id,4} = round(median(S1c(fdx)./lc(fdx)),2);
+		[me,sme,lme,rme] = median_man(S1c(fdx)./lc(fdx),pc);
+		tab_sum{id,5} = lme;
+		tab_sum{id,6} = rme;
+		tab_sum{id,7} = round(median(S2c(fdx)./lc(fdx)),2);
+		[me,sme,lme,rme] = median_man(S2c(fdx)./lc(fdx),pc);
+		tab_sum{id,8} = lme;
+		tab_sum{id,9} = rme;
+		tab_sum{id,10} = median(Le_rel(fdx));
+	end % tabulate
 end % pattern_metastudy_plot
 
 

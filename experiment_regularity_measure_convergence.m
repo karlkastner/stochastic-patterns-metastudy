@@ -47,7 +47,7 @@ e = randn(nx,m);
 distribution_C = {'gauss','laplace','cauchy'}
 
 clear out out_thresh
-for jdx=1:length(distribution_C)
+for jdx=3 %length(distribution_C)
 distribution = distribution_C{jdx};
 
 reg = [];
@@ -56,42 +56,46 @@ for idx=1:length(Sxpc)
 switch (distribution)
 case {'gauss'}
 	% density parameter
-	[f0,s] = normalwrappedpdf_mode2par(fc,Sxpc(idx));
+	[f0,s] = normalmirroredpdf_mode2par(fc,0.5*Sxpc(idx));
 	% density
-	S  = normalwrappedpdf(fx,f0,s);
-	% width
-	w = normalwrappedpdf_width(f0,s);
+	Sx  = normalmirroredpdf(fx,f0,s);
 case {'laplace'}
-	[f0,s] = laplacewrappedpdf_mode2par(fc,Sxpc(idx));
-	S = laplacewrappedpdf(fx,f0,s);
-	w = laplacewrappedpdf_width(f0,s);
+	[f0,s] = laplacemirroredpdf_mode2par(fc,0.5*Sxpc(idx));
+	Sx = laplacemirroredpdf(fx,f0,s);
 case {'cauchy'}
-	[f0,s] = cauchywrappedpdf_mode2par(fc,Sxpc(idx));
+	[f0,s] = cauchymirroredpdf_mode2par(fc,0.5*Sxpc(idx));
 	f0_(idx,1) = f0;
 	s_(idx,1) = s;
-	S = cauchywrappedpdf(fx,f0,s);
-	try
-	w = cauchywrappedpdf_width(f0,s);
-	catch
-	w=NaN;
-	end
+	Sx = cauchymirroredpdf(fx,f0,s);
+if (0)
+clf
+plot(fx,Sx);
+xlim([0,max(fx)])
+hold on
+plot(fc,0.5*Sxpc(idx),'*')
+vline(f0)
+%plot(fx,0.5*normpdf(fx,f0,s))
+%plot(fx,0.5*normpdf(fx,f0,s)+0.5*normpdf(fx,-f0,s))
+%pause
+end
+
 end % switch distribution
 	% the density of thresholded patterns has no analytic expression,
 	% so we estimate them as the average density over m patterns
 	% generate random patterns
-	b = real(ifft(sqrt(S).*fft(e)));
+	b = real(ifft(sqrt(Sx).*fft(e)));
 	% threshold
 	b = b>mean(b,'all');
 	s2 = var(b);
 	% periodogram TODO normalize
-	Shat = Lx./(s2*nx^2).*abs(fft(b-mean(b,'all'))).^2;
+	hatSx = Lx./(s2*nx^2).*abs(fft(b-mean(b,'all'))).^2;
 	% density estimate
-	Sbar = mean(Shat,2);
+	barSx = mean(hatSx,2);
 
 	% estimate regularity based on various properties
-	[reg(idx,:),leg_C,out(idx,jdx)] = regularity_measure(fx,S,distribution);
+	[reg(idx,:),leg_C,out(idx,jdx)] = regularity_measure(fx,Sx,distribution);
 	% repeat estimating for density of thresholded patterns
-	[reg_thresh(idx,:),leg_C,out_thresh(idx,jdx)] = regularity_measure(fx,Sbar,distribution);
+	[reg_thresh(idx,:),leg_C,out_thresh(idx,jdx)] = regularity_measure(fx,barSx,distribution);
 end % for idx
 
 splitfigure([2,3],[1,jdx],fflag);

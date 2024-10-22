@@ -22,18 +22,36 @@ if (~exist('pflag','var'))
 	pflag = 0;
 end
 mode     = 'relxy';
-pdf_str  = 'logn';
-pdfy_str = 'exp';
+pdfx_str  = 'normal';
+%pdfx_str  = 'lognormal';
+%pdfy_str = 'laplace';
+pdfy_str  = 'normal'
 ps = 1.5;
+pc = 0.375;
+cmap = colormap_vegetation2();
+%colormap(flipud((1-pc)*gray() + pc*colormap_vegetation()))
 % mode='rely';
+% TODO laplace, lorentzian
 
-% distribution along the primary
-pdf = @lognpdf;
-pdf_mode2par = @logn_mode2par;
+% distribution along the primary axis
+switch (pdfx_str)
+case {'normal'}
+	pdfx          = @normalwrappedpdf;
+	pdfx_mode2par = @(fc,Sc) normalwrappedpdf_mode2par(fc,0.5*Sc);
+case {'lognormal'}
+	pdfx          = @longmirroredpdf;
+	pdfx_mode2par = @lognpdf_mode2par;
+end
 
-% distribution along the secondary axis 
-pdfy = @exppdf;
-pdfy_mode2par = @exppdf_max2par;
+% distribution along the secondary axis
+switch (pdfy_str)
+case {'normal'}
+	pdfy = @normpdf;
+	pdfy_mode2par = @normpdf_mode2par;
+case {'laplace'}
+	pdfy = @laplacepdf;
+	pdfy_mode2par = @laplacepdf_mode2par;
+end
 
 % spatial extend
 L  = [60,10];
@@ -45,46 +63,45 @@ fc = 1/lc;
 dx = lc/10;
 % number of grid point
 n  = L/dx;
+
 % reset random number generator (for reproducibility)
 rng_ = 0;
 rng(rng_)
 
 switch (mode)
 case {'equal'}
-	Scx = 2*logspace(-1,1,n(1))';
-	Scy = logspace(-1,1,n(1));
+	Sxpc = 2*logspace(-1,1,n(1))';
+	Syc = logspace(-1,1,n(1));
 case {'independent'}
-	Scx = 2*logspace(-1,1,n(1))';
+	Sxpc = 2*logspace(-1,1,n(1))';
 	L(2) = L(1);
 	n(2) = n(1);
-	Scy = logspace(-1,1,n(2));
+	Syc = logspace(-1,1,n(2));
 case {'rely'}
 	L(2) = 30;
 	n(2) = m*L(2);
-	Scy_rel = logspace(-1,1,n(2));
-	Scy = cvec(Scx)*Scy_rel;
+	Syc_rel = logspace(-1,1,n(2));
+	Syc = cvec(Sxpc)*Syc_rel;
 case {'relxy'}
-	ScxScy_lim       = [0.125,16];
-	Scy_div_Scx_lim  = [2.^-1.5,2.^1.5];
+	SxpcSyc_lim       = [0.125,16];
+	Syc_div_Sxpc_lim  = [2.^-1.5,2.^1.5];
 	L = [60,30];
-	L(2) = L(1)*range(log10(Scy_div_Scx_lim))/range(log10(ScxScy_lim));
+	L(2) = L(1)*range(log10(Syc_div_Sxpc_lim))/range(log10(SxpcSyc_lim));
 	m = 10;
 	n  = round(m*L);
-	ScxScy = logspace(log10(ScxScy_lim(1)),log10(ScxScy_lim(2)),n(1))';
-	Scy_div_Scx = logspace(log10(Scy_div_Scx_lim(1)),log10(Scy_div_Scx_lim(2)),n(2))';
-	Scx = ScxScy./rvec(Scy_div_Scx);
-	Scy = ScxScy.*rvec(Scy_div_Scx);
+	SxpcSyc      = logspace(log10(SxpcSyc_lim(1)),log10(SxpcSyc_lim(2)),n(1))';
+	Syc_div_Sxpc = logspace(log10(Syc_div_Sxpc_lim(1)),log10(Syc_div_Sxpc_lim(2)),n(2))';
+	Sxpc = sqrt(SxpcSyc./rvec(Syc_div_Sxpc));
+	Syc = sqrt(SxpcSyc.*rvec(Syc_div_Sxpc));
 
 end
 
 % output file
-%f_str = sprintf('pattern-sweep-%s-%s-%s-Scx-%f-%f-Scy-%f-$f-L-%f-%f-n-%d-%d',pdf_str,pdfy_str,mode,min(Scx(:)),max(Scx(:)),min(Scy(:)),max(Scy(:)),L,n);
-filename=sprintf('mat/synthetic-anisotropic-pattern-rng-%d-Scx-%f-%f-Scy-%f-%f-L-%d-%d-dx-%d.mat',rng_,min(Scx(:)),max(Scx(:)),min(Scy(:)),max(Scy(:)),L(1),L(2),dx(1));
-%f_str = ['mat/',f_str,'.mat'];
-
-if (exist(filename,'file'))
+filebase_str = sprintf('synthetic-pattern-anisotropic-Sx-%s-Sy-%s-Sxpc-%f-%f-Syc-%f-%f-L-%d-%d-dx-%d-rng-%d',pdfx_str,pdfy_str,min(Sxpc(:)),max(Sxpc(:)),min(Syc(:)),max(Syc(:)),L(1),L(2),dx(1),rng_);
+filename_str = ['mat/',filebase_str,'.mat'];
+if (exist(filename_str,'file'))
 	disp('Loading file');
-	load(filename);
+	load(filename_str);
 else
 
 % axes in real space
@@ -98,7 +115,7 @@ e  = randn(n);
 fe = fft2(e);
 
 % vary y-regularity on y-axis
-%-> vary Scy on y-axis
+%-> vary Syc on y-axis
 
 % compute density parameters a and b from characteristic wavelength 1/fc and regularity Sc*fc 
 b  = zeros(n);
@@ -110,17 +127,18 @@ flag = false;
 for idx=1:n(1)
 	for jdx=1:n(2)
 		disp([idx/n(1),jdx/n(2)])
-	if (1)
-		[p.x(idx,jdx,1),p.x(idx,jdx,2)] = pdf_mode2par(fc,Scx(idx,jdx)); 
-		if (~strcmp(pdfy_str,'exp'))
-			[p.y(idx,jdx,1),p.y(idx,jdx,2)] = pdfy_mode2par(0,Scy(idx,jdx)); 
-		else
-			[p.y(idx,jdx,1)] = pdfy_mode2par(Scy(idx,jdx)); 
-		end
-	else
-		[p.x(idx,jdx,1),p.x(idx,jdx,2)] = pdf_mode2par(fc,Scx(idx),[p.x(idx-1,jdx,1),p.x(idx-1,jdx,2)],flag);
-		[p.y(idx,jdx,1),p.y(idx,jdx,2)] = pdf_mode2par(0,Scy(idx),[p.y(idx-1,jdx,1),p.y(idx-1,jdx,2)],flag);
-	end
+
+%	if (1)
+		[p.x(idx,jdx,1),p.x(idx,jdx,2)] = pdfx_mode2par(fc,Sxpc(idx,jdx)); 
+		%if (~strcmp(pdfy_str,'exp'))
+		[p.y(idx,jdx,1),p.y(idx,jdx,2)] = pdfy_mode2par(0,Syc(idx,jdx)); 
+		%else
+		%	[p.y(idx,jdx,1)] = pdfy_mode2par(Syc(idx,jdx)); 
+		%end
+%	else
+%		[p.x(idx,jdx,1),p.x(idx,jdx,2)] = pdf_mode2par(fc,Sxpc(idx),[p.x(idx-1,jdx,1),p.x(idx-1,jdx,2)],flag);
+%		[p.y(idx,jdx,1),p.y(idx,jdx,2)] = pdf_mode2par(0,Syc(idx),[p.y(idx-1,jdx,1),p.y(idx-1,jdx,2)],flag);
+%	end
 	end % for jdx
 end % for idx
 
@@ -181,12 +199,12 @@ switch (mode)
 		disp(idx/n(1));
 		for jdx=1:n(2)
 			% spectral density
-			Sx = pdf(abs(fx),p.x(idx,jdx,1),p.x(idx,jdx,2));
-			if (~strcmp(pdfy_str,'exp'))
-				Sy = pdfy(abs(fy),p.y(idx,jdx,1),p.y(idx,jdx,2));
-			else
-				Sy = pdfy(abs(fy),p.y(idx,jdx,1));
-			end
+			Sx = pdfx(fx,p.x(idx,jdx,1),p.x(idx,jdx,2));
+			%if (~strcmp(pdfy_str,'exp'))
+			Sy = pdfy(fy,p.y(idx,jdx,1),p.y(idx,jdx,2));
+			%else
+			%	Sy = pdfy(abs(fy),p.y(idx,jdx,1));
+			%end
 			% there is a bug in matlab at gammapdf at 0
 			% Sy(1) = 2*Sy(2)-Sy(3);
 		
@@ -201,7 +219,7 @@ switch (mode)
 			fmsk =[];
 			[isperiodic(idx,jdx), p_periodic(idx,jdx), stati, out] = periodogram_test_periodicity_2d(...
 								bi, L, nf_test, bmsk, fmsk); 
-			isperiodic(idx,jdx)
+			%isperiodic(idx,jdx)
 			%p_periodic(idx,jdx) = stati.pn;
 		
 			b(idx,jdx) = real(bi(idx,jdx)); 
@@ -216,7 +234,7 @@ switch (mode)
 end % switch mode
 
 % store generated pattern
-save(filename,'b','Scx','ScxScy','Scy_div_Scx','Scy','p','isperiodic','p_periodic');
+save(filename_str,'x','y','L','dx','b','Sxpc','SxpcSyc','Syc_div_Sxpc','Syc','p','isperiodic','p_periodic');
 end % if ~exist file
 
 % display
@@ -236,9 +254,9 @@ axis tight
 axis xy
 %Sc_tick = [0.05,0.1,0.2,0.5,1,2,5,10,20];
 Sc_tick = 2.^(-4:5);
-x_tick = interp1(log10(ScxScy),x,log10(Sc_tick),'linear','extrap');
+x_tick = interp1(log10(SxpcSyc),x,log10(Sc_tick),'linear','extrap');
 set(gca,'xtick',x_tick,'xticklabel',num2str(cvec(round(Sc_tick,3))))
-xlabel('Regularity$_{2\mathrm{d}}$ $\displaystyle\frac{S_{cx}\cdot S_{cy}}{\lambda_c^2}$','interpreter','latex')
+xlabel('Regularity$_{xy}$ $\displaystyle\frac{S_{xc}^+\cdot S_{yc}}{\lambda_c^2}$','interpreter','latex')
 switch (mode)
 case {'equal'}
 case {'independent'}
@@ -248,13 +266,13 @@ case {'independent'}
 case {'relative'}
 	y_tick = [0.1,0.2,0.5,1,2,5,10];
 	set(gca,'ytick',log10(y_tick'),'yticklabel',num2str(cvec(round(y_tick,1))))
-	ylabel('Anisotropy of 2d-regularity S_{cy}/S_{cx}');
+	ylabel('Anisotropy of regularity S_{yc}/S_{xc}^+');
 end % switch mode
 
 Sc_tick = 2.^(-4:5);
-y_tick = interp1(log10(Scy_div_Scx),y,log10(Sc_tick),'linear','extrap');
+y_tick = interp1(log10(Syc_div_Sxpc),y,log10(Sc_tick),'linear','extrap');
 set(gca,'ytick',(y_tick'),'yticklabel',num2str(cvec(round(Sc_tick,2))))
-ylabel('Anisotropy of Regularity$_{2\mathrm{d}}$ $S_{cy}/S_{cx}$\hspace*{3em}','interpreter','latex');
+ylabel('Anisotropy of Regularity $S_{yc}/S_{xc}^+$\hspace*{3em}','interpreter','latex');
 
 hold on
 dat = load('mat/patterns-metastudy.mat');
@@ -262,23 +280,23 @@ lc = cvec(1./arrayfun(@(x) x.fc.x.hp,dat.stat));
 ismodel = cvec(arrayfun(@(x) x.ismodel,dat.stat));
 isisotropic = cvec(arrayfun(@(x) x.isisotropic,dat.stat));
 exclude = cvec(arrayfun(@(x) x.exclude,dat.stat));
-Scx_ = cvec(arrayfun(@(x) x.Sc.x.hp,dat.stat));
-Scy_ = cvec(arrayfun(@(x) x.Sc.y.hp,dat.stat));
+Sxpc_ = cvec(arrayfun(@(x) x.Sc.xp.hp,dat.stat));
+Syc_ = cvec(arrayfun(@(x) x.Sc.y.hp,dat.stat));
 
-Scx_Scy_     = Scx_.*Scy_;
-Scy_div_Scx_ = Scy_./Scx_;
+Sxpc_Syc_     = Sxpc_.*Syc_;
+Syc_div_Sxpc_ = Syc_./Sxpc_;
 
 col = 'br';
 for idx=1:2
 	fdx = ismodel == (idx-1) & isisotropic == 0 & exclude == 0;
-	qxqy = quantile(cvec(Scx_Scy_(fdx))./(lc(fdx).^2),[0.25,0.5,0.75]); 
-	qy_d_qx = quantile(cvec(Scy_div_Scx_(fdx)),[0.25,0.5,0.75]); 
-	x_ = interp1(log(ScxScy),x,log10(qxqy),'linear');
-	y_ = interp1(log(Scy_div_Scx),y,log10(qy_d_qx),'linear');
+	qxqy = quantile(cvec(Sxpc_Syc_(fdx))./(lc(fdx).^2),[0.25,0.5,0.75]);
+	qy_d_qx = quantile(cvec(Syc_div_Sxpc_(fdx)),[0.25,0.5,0.75]); 
+	x_ = interp1(log(SxpcSyc),x,log10(qxqy),'linear');
+	y_ = interp1(log(Syc_div_Sxpc),y,log10(qy_d_qx),'linear');
 	errorbar(x_(2),y_(2),y_(2)-y_(1),y_(3)-y_(1),x_(2)-x_(1),x_(3)-x_(2),[col(idx)],'linewidth',2)
 end % for idx
 
-colormap(flipud(colormap_vegetation()))
+colormap(cmap)
 
 figure(10);
 imagesc(xS,yS,p_periodic');
@@ -289,10 +307,11 @@ axis equal;
 axis tight;
 axis xy;
 set(gca,'xtick',x_tick,'xticklabel',num2str(cvec(round(Sc_tick,3))))
-xlabel('Regularity$_{2\mathrm{d}}$ $\displaystyle\frac{S_{cx}\cdot S_{cy}}{\lambda_c^2}$','interpreter','latex')
+xlabel('Regularity$_{2\mathrm{d}}$ $\displaystyle\frac{S_{xc}\cdot S_{yc}}{\lambda_c^2}$','interpreter','latex')
 set(gca,'ytick',(y_tick'),'yticklabel',num2str(cvec(round(Sc_tick,2))))         
 
 if (pflag)
 	pdfprint(1,'img/pattern-synthetic-anisotropic-sweep.pdf',ps)
+	pdfprint(1,['img/',filebase_str,'.pdf'],ps)
 end
 

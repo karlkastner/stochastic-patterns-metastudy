@@ -38,7 +38,7 @@ distribution_C = {'gauss','laplace','cauchy'};
 reg = [];
 reg_ = [];
 endtropy =[];
-sd= [];
+fsd= [];
 Rc = [];
 % for each resolution
 for idx=1:length(dx)
@@ -54,15 +54,15 @@ for idx=1:length(dx)
 	switch (distribution)
 	case {'gauss'}
 		% density parameter
-		[f0,s]=normalwrappedpdf_mode2par(fc,Sxpc);
+		[f0,s]=normalmirroredpdf_mode2par(fc,0.5*Sxpc);
 		% density
-		Sx  = 0.5*normalwrappedpdf(fx,f0,s);
+		Sx  = normalmirroredpdf(fx,f0,s);
 	case {'laplace'}
-		[f0,s]=laplacewrappedpdf_mode2par(fc,Sxpc);
-		Sx  = 0.5*laplacewrappedpdf(fx,f0,s);
+		[f0,s]=laplacemirroredpdf_mode2par(fc,0.5*Sxpc);
+		Sx  = laplacemirroredpdf(fx,f0,s);
 	case {'cauchy'}
-		[f0,s]=cauchywrappedpdf_mode2par(fc,Sxpc);
-		Sx  = 0.5*cauchywrappedpdf(fx,f0,s);
+		[f0,s]=cauchymirroredpdf_mode2par(fc,0.5*Sxpc);
+		Sx  = cauchymirroredpdf(fx,f0,s);
 	end
 
 	% estimate regularity from various parameters
@@ -70,7 +70,7 @@ for idx=1:length(dx)
 
 	Rc(idx,jdx) = out.Rc;
 	entropy(idx,jdx) = out.entropy;
-	sd(idx,jdx) = out.sd;
+	fsd(idx,jdx) = out.fsd;
 	end
 end
 xlabel_str = 'Sampling interval \Delta x/\lambda_c'
@@ -90,7 +90,7 @@ xlim(xl_);
 legend('Gauss','Laplace','Cauchy');
 
 subplot(sph,4,2);
-plot(dx,sd,'linewidth',1);
+plot(dx,fsd,'linewidth',1);
 ylim([0,2]);
 xlabel(xlabel_str);
 ylabel('Standard deviation')

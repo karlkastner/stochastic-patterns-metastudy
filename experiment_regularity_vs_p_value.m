@@ -22,7 +22,7 @@ if (~exist('pflag','var'))
 end
 fflag = pflag;
 
-if (~exist('qr','var'))
+if (~exist('qr','var') || ~exist('qp','var'))
 % reset random nummer generator for exact reproducibility
 rng(0);
 % number of samples to estimate test quantiles  
@@ -57,18 +57,19 @@ qr = zeros(3,length(regularity));
 for jdx=1:length(regularity)
 	disp(jdx);
 	% max of density
-	Sc      = regularity(jdx)/fc;
+	Sxpc      = regularity(jdx)/fc;
+	Syc       = Sxpc;
 	% generate log-normal density for Sx
-	[a,b]   = logn_mode2param(fc,Sc);
-	Sx      = lognpdf(abs(fx),a,b); 
-	% generate exp-density for Sy
-	c       = exppdf_max2par(Sc);
-	Sy      = exppdf(abs(fy),c);
+	[a,b]   = lognpdf_mode2par(fc,Sxpc);
+	Sx      = lognmirroredpdf(fx,a,b); 
+	% generate laplacian-density for Sy
+	[a,b]   = laplacepdf_mode2par(0,Syc);
+	Sy      = laplacepdf(fy,a,b);
 	% normalize
-	Sx    = 2*Sx/(sum(Sx)*df);
-	Sy    = 2*Sy/(sum(Sy)*df);
+	Sx      = Sx/(sum(Sx)*df);
+	Sy      = Sy/(sum(Sy)*df);
 	% transfer function	
-	T     = sqrt(0.5*Sx)*sqrt(0.5*Sy');
+	T       = sqrt(Sx)*sqrt(Sy');
 
 	% sample np repetitions
 	hat_reg = zeros(np,1);
@@ -79,29 +80,30 @@ for jdx=1:length(regularity)
 		% patterns
 		b    = ifft2(T.*fft2(e));
 		% periodogram
-		hatS = abs(fft2(b-mean(b(:)))).^2;
-		barS = gaussfilt2(hatS,nf);
+		hatSxy = abs(fft2(b-mean(b,'all'))).^2;
+		% TODO normalize
+		barSxy = gaussfilt2(hatSxy,nf);
 		% mask frequency space, points containing 90% of spectral energy
-		[sS,sds] = sort(barS(:),'descend');
+		[sS,sds] = sort(barSxy(:),'descend');
 		iS   = cumsum(sS(:));
 		iS   = iS/iS(end);
 		fdx  = find(iS>pfmsk,1,'first');
 		fmsk = false(n);
 		fmsk(sds(1:fdx)) = true;
-		% exclude symmetric part from text
+		% exclude symmetric part from test
 		fmsk(fx<0) = 0;
 		bmsk = [];
 		% test for periodicity
-		[issignificant,p(idx)] = periodogram_test_periodicity_2d(b,nf,bmsk,fmsk,ns);
+		[issignificant,p(idx)] = periodogram_test_periodicity_2d(b,[],nf,bmsk,fmsk,ns);
 		
 		% estimate density along x
-		hatSx  = sum(hatS,2)*df;
+		hatSx  = sum(hatSxy,2)*df;
 		% normalize
-		hatSx  = 2*hatSx/(sum(hatSx)*df);
+		hatSx  = hatSx/(sum(hatSx)*df);
 		% extract regularity
 		[hat_Sc,mdx] = max(hatSx);
 		hat_fc = abs(fx(mdx));
-		hat_reg(idx) = hat_Sc.*hat_fc;
+		hat_reg(idx) = 2*hat_Sc.*hat_fc;
 	end % for jdx
 	% quartiles
 	qp(:,jdx) = quantile(p,[0.25,0.5,0.75]);
@@ -117,7 +119,7 @@ errorbar(regularity,qp(2,:),qp(2,:)-qp(1,:),qp(3,:)-qp(2,:),'*');
 xlim(lim);
 ylim([0,1])
 set(gca,'xscale','log');
-xlabel('True Regularity S_{cx}/\lambda_c');
+xlabel('True Regularity S_{xc}^+/\lambda_c');
 ylabel('p');
 set(gca,'xtick',2.^(-3:3))
 
@@ -128,8 +130,8 @@ errorbar(regularity,qr(2,:),qr(2,:)-qr(1,:),qr(3,:)-qr(2,:),'*'); xlim(lim); set
 hold on;
 plot(lim,lim,'k-');
 ylim(lim);
-xlabel('True Regularity S_{cx}/\lambda_c');
-ylabel('Estimated regularity S_{cx}/\lambda_c');
+xlabel('True Regularity S_{xc}^+/\lambda_c');
+ylabel('Estimated regularity S_{xc}^+/\lambda_c');
 set(gca,'xtick',2.^(-3:3))
 set(gca,'ytick',2.^(-3:3))
 

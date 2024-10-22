@@ -14,8 +14,9 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
-%% numerical experiment demonstrating the bias and standard error of the
-%% estimated regularity
+%% numerical experiment estimating the bias and standard error of the
+%% regularity estimated based on the height of the mode
+%% spatial extend is varied
 %
 
 if (~exist('pflag','var'))
@@ -25,6 +26,9 @@ fflag = pflag;
 
 % recompute the experiment only if it has not yet run
 if (~exist('serr_rel','var'))
+pdfx_str = 'lognormal';
+pdfy_str = 'normal';
+
 % reset random number generator for exact reproducibility
 rng(0)
 % number of samples
@@ -36,7 +40,7 @@ L          = 2.^(1.5:0.5:4.5);
 % characteristic frequency fc = 1/lambda_c
 fc         = 1;
 % spatial resolution
-dx = 1/(50*fc);
+dx = 1/(20*fc);
 
 nf = 0;
 
@@ -51,24 +55,33 @@ for idx=1:length(regularity)
 % display progress
 disp(idx)
 for jdx=1:length(L)
-	% construct density
-	n     = round(L(jdx)/dx);
-	Sc    = regularity(idx)/fc;
-	[a,b] = logn_mode2param(fc,Sc);
-	c     = exppdf_max2par(Sc);
+	n       = round(L(jdx)/dx);
 	[fx,fy] = fourier_axis_2d([L(jdx),L(jdx)],[n,n]);
-	% generate log-normal and exp density
-	Sx    = lognpdf(abs(fx),a,b); 
-	Sy    = exppdf(abs(fy),c);
+	% construct density
+	Sxpc    = regularity(idx)/fc;
+	Syc     = Sxpc;
+	[a,b]   = lognmirroredpdf_mode2par(fc,0.5*Sxpc);
+	% generate mirrored log-normal density
+	Sx    = lognmirroredpdf(fx,a,b);
+
+	switch (pdfy_str)
+	case {'laplace'}
+		% note that for laplace, the outer product Sx Sy ceases to have elliptic contours
+		c     = laplacepdf_max2par(Syc);
+		Sy    = laplacepdf(fy,0,c);
+	case {'normal'}
+		[f0,s] = normpdf_mode2par(0,Syc);
+		Sy     = normpdf(f0,s);
+	end
 	% spectral resolution
 	df = 1./L(jdx);
 	% normalize
-	Sx    = 2*Sx/(sum(Sx)*df);
-	Sy    = 2*Sy/(sum(Sy)*df);
+	Sx    = Sx/(sum(Sx)*df);
+	Sy    = Sy/(sum(Sy)*df);
 	% transfer function
-	T     = sqrt(0.5*Sx)*sqrt(0.5*Sy');
+	T     = sqrt(Sx)*sqrt(Sy');
 	% repeat exeriment for estimating the bias and variation
-	hat_Sc = zeros(m,1);
+	hat_Sxpc = zeros(m,1);
 	hat_fc = zeros(m,1);
 	for kdx=1:m
 		% white noise
@@ -79,12 +92,13 @@ for jdx=1:length(L)
 		hatS  = abs(fft2(b-mean(b,'all'))).^2;
 		% estimate density
 		hatSx = sum(hatS,2)*df;
-		hatSx = 2*hatSx/(sum(hatSx)*df);
+		hatSxp = hatSx.*(fx>=0);
+		hatSxp = hatSxp/(sum(hatSxp)*df);
 		% estimate regularity
-		[hat_Sc(kdx),mdx] = max(hatSx);
+		[hat_Sxpc(kdx),mdx] = max(hatSxp);
 		hat_fc(kdx)       = abs(fx(mdx));
 	end % for kdx
-	hat_reg = hat_Sc.*hat_fc;
+	hat_reg = hat_Sxpc.*hat_fc;
 	% bias
 	bias(idx,jdx) = mean(hat_reg)-regularity(idx);
 	bias_rel(idx,jdx) = bias(idx,jdx)./regularity(idx);
@@ -104,7 +118,7 @@ splitfigure([2,3],[1,1],fflag);
 cla();
 contourf(regularity,L,serr_rel');
 shading interp
-xlabel('Regularity $S_{cx}/\lambda_c$','interpreter','latex');
+xlabel('Regularity $S_{xc}^+/\lambda_c$','interpreter','latex');
 ylabel('Spatial extent $L/\lambda_c$','interpreter','latex');
 set(gca,'xscale','log','yscale','log')
 axis square
@@ -129,7 +143,8 @@ set(gca,'ytick',2.^(-3:5));
 if (~pflag)
 	title('Relative Standard Deviation');
 end
-xlabel('Regularity $S_{cx}/\lambda_c$','interpreter','latex');
+%xlabel('Regularity $S_{cx}/\lambda_c$','interpreter','latex');
+xlabel('Regularity $S_{xc}^+/\lambda_c$','interpreter','latex');
 ylabel('Spatial extent $L/\lambda_c$','interpreter','latex');
 
 % plot bias
@@ -142,16 +157,20 @@ colorbar('location','southoutside');
 shading interp
 set(gca,'xtick',2.^(-3:5));
 set(gca,'ytick',2.^(-3:5));
+clim = max(abs(bias_rel(:)))*[-1,1];
+caxis(clim);
 if (~pflag)
 	title('Relative Bias');
 end
-xlabel('Regularity $S_{cx}/\lambda_c$','interpreter','latex');
+%xlabel('Regularity $S_{cx}/\lambda_c$','interpreter','latex');
+xlabel('Regularity $S_{xc}^+/\lambda_c$','interpreter','latex');
 ylabel('Spatial extent $L/\lambda_c$','interpreter','latex');
 
 if (pflag)
 	ps = 2;
-	pdfprint(11,'img/regularity-estimate-serr.pdf',ps);
-	pdfprint(12,'img/regularity-estimate-sd.pdf',ps);
-	pdfprint(13,'img/regularity-estimate-bias.pdf',ps);
+	base = sprintf('img/regularity-estimate-Sx-%s-Sy-%s',pdfx_str,pdfy_str);
+	pdfprint(11,[base,'-serr.pdf'],ps);
+	pdfprint(12,[base,'-sd.pdf'],ps);
+	pdfprint(13,[base,'-bias.pdf'],ps);
 end
 

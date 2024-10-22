@@ -24,7 +24,8 @@ fflag = pflag;
 % characteristic frequency
 fc = 1;
 % density maximum
-Sc = 1;
+Sxpc = 1;
+Syc  = Sxpc;
 % spatial extent
 Lx  = 10/fc;
 % spatial resolution
@@ -63,20 +64,20 @@ for ddx=1:length(distribution_C)
 		switch (distribution)
 		case {'gauss'}
 			% density parameter
-			[f0x,sx] = normalwrappedpdf_mode2par(fc,Sc);
-			[f0y,sy] = normpdf_mode2par(0,Sc);
+			[f0x,sx] = normalmirroredpdf_mode2par(fc,0.5*Sxpc);
+			[f0y,sy] = normpdf_mode2par(0,Syc);
 			% density
-			Sx = normalwrappedpdf(fx,f0x,sx);
+			Sx = normalmirroredpdf(fx,f0x,sx);
 			Sy = normpdf(fy,f0y,sy);
 		case {'laplace'}
-			[f0x,sx] = laplacewrappedpdf_mode2par(fc,Sc);
-			Sx = laplacewrappedpdf(fx,f0x,sx);
-			[f0y,sy] = laplacepdf_mode2par(0,Sc);
+			[f0x,sx] = laplacemirroredpdf_mode2par(fc,0.5*Sxpc);
+			[f0y,sy] = laplacepdf_mode2par(0,Syc);
+			Sx = laplacemirroredpdf(fx,f0x,sx);
 			Sy = laplacepdf(fy,f0y,sy);
 		case {'cauchy'}
-			[f0x,sx] = cauchywrappedpdf_mode2par(fc,Sc);
-			Sx = cauchywrappedpdf(fx,f0x,sx);
-			[f0y,sy] = cauchypdf_mode2par(0,Sc);
+			[f0x,sx] = cauchymirroredpdf_mode2par(fc,0.5*Sxpc);
+			[f0y,sy] = cauchypdf_mode2par(0,Syc);
+			Sx = cauchymirroredpdf(fx,f0x,sx);
 			Sy = cauchypdf(fy,f0y,sy);
 		end
 		% two dimensional density
